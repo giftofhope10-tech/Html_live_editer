@@ -1146,3 +1146,13 @@ body {
     width: 50%;
   }
 }
+
+.delete-btn {
+  color: var(--error) !important;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover, .delete-btn:active {
+  background: var(--error) !important;
+  color: white !important;
+}

@@ -97,8 +97,79 @@ cd android
 
 ## Recent Changes
 
+- December 4, 2024: Added Delete Project feature in Settings (replaced Clear Code)
+- December 4, 2024: Project names can now include file extensions (.html, .css, .js, .ts, etc.)
 - December 4, 2024: Preview button moved to top right corner next to Settings
 - December 4, 2024: Privacy Policy and Terms updated with latest date
 - December 4, 2024: Android SDK 35 configuration added
 - December 4, 2024: ProGuard/R8 mapping rules added
 - December 4, 2024: Play Store compliance documentation created
+
+## Building APK/AAB for Android
+
+### Prerequisites
+
+To build the Android app, you need:
+1. **Android Studio** (recommended) or command-line SDK tools
+2. **JDK 17** (required for SDK 35)
+3. **Android SDK 35** installed
+4. **Gradle 8.2+** (included in the project)
+
+### Step-by-Step Build Process
+
+#### Step 1: Build the Web App First
+```bash
+npm run build
+```
+This creates the production build in the `dist/` folder.
+
+#### Step 2: Copy Web Assets to Android
+Copy the built files from `dist/` to `android/app/src/main/assets/www/`:
+```bash
+mkdir -p android/app/src/main/assets/www
+cp -r dist/* android/app/src/main/assets/www/
+```
+
+#### Step 3: Build Debug APK (for testing)
+```bash
+cd android
+./gradlew assembleDebug
+```
+The APK will be at: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+#### Step 4: Build Release AAB (for Play Store)
+First, create a keystore for signing:
+```bash
+keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias html-editor
+```
+
+Add signing config to `android/gradle.properties`:
+```properties
+RELEASE_STORE_FILE=../release-key.jks
+RELEASE_STORE_PASSWORD=your_password
+RELEASE_KEY_ALIAS=html-editor
+RELEASE_KEY_PASSWORD=your_password
+```
+
+Build the release AAB:
+```bash
+cd android
+./gradlew bundleRelease
+```
+The AAB will be at: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### AdMob Setup (Required before publishing)
+1. Create an AdMob account at https://admob.google.com
+2. Create a new app and get your App ID
+3. Update `android/app/src/main/AndroidManifest.xml`:
+   - Replace `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` with your real App ID
+4. Create ad units and update the app code with your ad unit IDs
+
+### Play Store Submission
+1. Sign in to [Google Play Console](https://play.google.com/console)
+2. Create a new app
+3. Upload the AAB file
+4. Fill in store listing (screenshots, description, etc.)
+5. Add Privacy Policy URL
+6. Complete the content rating questionnaire
+7. Submit for review

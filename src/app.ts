@@ -6,7 +6,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorState } from '@codemirror/state';
 import { searchKeymap, highlightSelectionMatches, openSearchPanel } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
-import { Storage, Project } from './storage';
+import { Storage } from './storage';
 import { Settings } from './settings';
 
 const AD_INTERVAL_MS = 2 * 60 * 60 * 1000;
@@ -564,11 +564,8 @@ export class App {
       this.hideTerms();
     });
 
-    document.getElementById('clearDataBtn')?.addEventListener('click', () => {
-      if (confirm('Are you sure you want to clear all saved code? This cannot be undone.')) {
-        this.storage.clearCode();
-        location.reload();
-      }
+    document.getElementById('deleteProjectBtn')?.addEventListener('click', () => {
+      this.deleteCurrentProjectFromSettings();
     });
 
     window.addEventListener('online', () => {
@@ -678,10 +675,10 @@ export class App {
   }
 
   private createNewProject(): void {
-    const name = prompt('Enter project name:', `Project ${this.storage.getProjects().length + 1}`);
-    if (name) {
+    const name = prompt('Enter project name (you can use extensions like .html, .css, .js, .ts):', `Project ${this.storage.getProjects().length + 1}`);
+    if (name && name.trim()) {
       this.saveCode();
-      const newProject = this.storage.createProject(name);
+      const newProject = this.storage.createProject(name.trim());
       this.refreshProjectUI();
       this.loadProjectCode();
       this.showToast(`Created "${newProject.name}"`);
@@ -700,11 +697,12 @@ export class App {
     const project = this.storage.getProjects().find(p => p.id === projectId);
     if (!project) return;
 
-    const newName = prompt('Enter new project name:', project.name);
-    if (newName && newName !== project.name) {
-      this.storage.renameProject(projectId, newName);
+    const newName = prompt('Enter new project name (you can use extensions like .html, .css, .js, .ts):', project.name);
+    if (newName && newName.trim() && newName !== project.name) {
+      const trimmedName = newName.trim();
+      this.storage.renameProject(projectId, trimmedName);
       this.refreshProjectUI();
-      this.showToast(`Renamed to "${newName}"`);
+      this.showToast(`Renamed to "${trimmedName}"`);
     }
   }
 
@@ -723,6 +721,31 @@ export class App {
       this.refreshProjectUI();
       this.loadProjectCode();
       this.showToast(`Deleted "${project.name}"`);
+    }
+  }
+
+  private deleteCurrentProjectFromSettings(): void {
+    const activeProject = this.storage.getActiveProject();
+    if (!activeProject) return;
+
+    const projects = this.storage.getProjects();
+    if (projects.length <= 1) {
+      this.showToast('Cannot delete the only project. Create a new project first.');
+      return;
+    }
+
+    const projectName = activeProject.name;
+    if (confirm(`Delete "${projectName}"? This action cannot be undone.`)) {
+      const deleted = this.storage.deleteProject(activeProject.id);
+      if (deleted) {
+        this.hideSettings();
+        this.refreshProjectUI();
+        this.loadProjectCode();
+        this.updateLivePreview();
+        this.showToast(`Deleted "${projectName}"`);
+      } else {
+        this.showToast('Failed to delete project');
+      }
     }
   }
 
