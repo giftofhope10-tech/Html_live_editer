@@ -28,10 +28,11 @@ workflows:
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
       
-      - name: Generate Gradle wrapper
+      - name: Download Gradle wrapper jar
         script: |
           cd android
-          gradle wrapper --gradle-version 8.5
+          mkdir -p gradle/wrapper
+          curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
       
       - name: Build Android Debug APK
