@@ -1,4 +1,6 @@
-# HTML Live Editor
+# Html_Live_Editor
+
+**Package Name:** `com.iftechstudio.html_live_editor`
 
 A mobile-friendly Progressive Web App (PWA) for editing and previewing HTML, CSS, and JavaScript code with live preview functionality.
 

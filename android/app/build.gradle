@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.htmleditor.app'
+    namespace 'com.iftechstudio.html_live_editor'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.htmleditor.app"
+        applicationId "com.iftechstudio.html_live_editor"
         minSdk 24
         targetSdk 35
         versionCode 1
