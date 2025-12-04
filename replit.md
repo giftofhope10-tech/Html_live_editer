@@ -99,6 +99,8 @@ cd android
 
 ## Recent Changes
 
+- December 5, 2024: Fixed Android app crash - MainActivity package reference in AndroidManifest.xml
+- December 5, 2024: Removed missing google_play_services_version integer reference
 - December 4, 2024: Added Delete Project feature in Settings (replaced Clear Code)
 - December 4, 2024: Project names can now include file extensions (.html, .css, .js, .ts, etc.)
 - December 4, 2024: Preview button moved to top right corner next to Settings
