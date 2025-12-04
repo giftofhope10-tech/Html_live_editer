@@ -12,13 +12,12 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val PWA_URL = "https://htmleditor.app"
+    private val LOCAL_URL = "file:///android_asset/www/index.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            webView.loadUrl(PWA_URL)
+            webView.loadUrl(LOCAL_URL)
         }
     }
 
@@ -47,9 +46,11 @@ class MainActivity : AppCompatActivity() {
             domStorageEnabled = true
             databaseEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            allowFileAccess = false
-            allowContentAccess = false
-            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+            allowFileAccess = true
+            allowContentAccess = true
+            allowFileAccessFromFileURLs = true
+            allowUniversalAccessFromFileURLs = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
@@ -65,10 +66,14 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 val url = request?.url?.toString() ?: return false
                 
-                return if (url.startsWith(PWA_URL) || url.startsWith("https://htmleditor.app")) {
+                return if (url.startsWith("file://") || url.startsWith("javascript:")) {
                     false
                 } else {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                     true
                 }
             }
@@ -90,10 +95,12 @@ class MainActivity : AppCompatActivity() {
         webView.saveState(outState)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack()
         } else {
+            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
