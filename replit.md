@@ -158,12 +158,23 @@ cd android
 ```
 The AAB will be at: `android/app/build/outputs/bundle/release/app-release.aab`
 
+### AdMob Test IDs (Currently Configured)
+
+The project currently uses official Google AdMob test IDs for development:
+
+| Type | Test ID |
+|------|---------|
+| **App ID (Android)** | `ca-app-pub-3940256099942544~3347511713` |
+| **Banner Ad Unit** | `ca-app-pub-3940256099942544/6300978111` |
+| **Interstitial Ad Unit** | `ca-app-pub-3940256099942544/1033173712` |
+
 ### AdMob Setup (Required before publishing)
 1. Create an AdMob account at https://admob.google.com
-2. Create a new app and get your App ID
+2. Create a new app and get your **real** App ID
 3. Update `android/app/src/main/AndroidManifest.xml`:
-   - Replace `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` with your real App ID
-4. Create ad units and update the app code with your ad unit IDs
+   - Replace the test App ID with your real App ID
+4. Create ad units and update the app code with your real ad unit IDs
+5. **Important:** Never publish with test IDs - Google will reject your app
 
 ### Play Store Submission
 1. Sign in to [Google Play Console](https://play.google.com/console)
