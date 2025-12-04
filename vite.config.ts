@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: './',
   server: {
     host: '0.0.0.0',
     port: 5000,
@@ -19,7 +20,7 @@ export default defineConfig({
         background_color: '#1a1a2e',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: './',
         icons: [
           {
             src: 'icons/icon-192.svg',
