@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HTML Live Editor</string>
+    <string name="app_description">Mobile-friendly HTML, CSS, JavaScript Live Editor with offline support</string>
+
+    <!-- Asset Statements for TWA verification -->
+    <string name="asset_statements">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://htmleditor.app\"
+            }
+        }]
+    </string>
+
+    <!-- Content Descriptions for Accessibility -->
+    <string name="cd_settings">Settings</string>
+    <string name="cd_preview">Preview</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_save">Save</string>
+    <string name="cd_dark_mode">Toggle Dark Mode</string>
+</resources>
