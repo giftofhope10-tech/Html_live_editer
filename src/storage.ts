@@ -171,16 +171,12 @@ export class Storage {
   }
 
   deleteProject(projectId: string): boolean {
-    if (this.projectsData.projects.length <= 1) {
-      return false;
-    }
-
     const index = this.projectsData.projects.findIndex(p => p.id === projectId);
     if (index === -1) return false;
 
     this.projectsData.projects.splice(index, 1);
 
-    if (this.projectsData.activeProjectId === projectId) {
+    if (this.projectsData.activeProjectId === projectId && this.projectsData.projects.length > 0) {
       this.projectsData.activeProjectId = this.projectsData.projects[0].id;
     }
 

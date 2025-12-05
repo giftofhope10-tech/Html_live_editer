@@ -852,12 +852,12 @@ export class App {
     const projects = this.storage.getProjects();
     const activeId = this.storage.getActiveProjectId();
 
-    if (projects.length <= 1) {
+    if (projects.length === 0) {
       deleteList.innerHTML = `
         <div class="delete-project-item">
           <div class="project-info">
-            <span class="project-name">No projects to delete</span>
-            <span class="project-status">Create more projects first</span>
+            <span class="project-name">No projects available</span>
+            <span class="project-status">Create a project first</span>
           </div>
         </div>
       `;
@@ -895,28 +895,34 @@ export class App {
 
   private deleteProjectFromList(projectId: string): void {
     const projects = this.storage.getProjects();
-    if (projects.length <= 1) {
-      this.showToast('Cannot delete the only project');
-      return;
-    }
-
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
+    const isOnlyProject = projects.length === 1;
     const isActive = this.storage.getActiveProjectId() === projectId;
-    const confirmMsg = isActive 
-      ? `Delete "${project.name}" (current project)? This cannot be undone.`
-      : `Delete "${project.name}"? This cannot be undone.`;
+    
+    let confirmMsg = `Delete "${project.name}"? This cannot be undone.`;
+    if (isOnlyProject) {
+      confirmMsg = `Delete "${project.name}"? A new empty project will be created automatically.`;
+    } else if (isActive) {
+      confirmMsg = `Delete "${project.name}" (current project)? This cannot be undone.`;
+    }
 
     if (confirm(confirmMsg)) {
-      if (isActive) {
-        const otherProject = projects.find(p => p.id !== projectId);
-        if (otherProject) {
-          this.storage.setActiveProject(otherProject.id);
+      if (isOnlyProject) {
+        this.storage.deleteProject(projectId);
+        const newProject = this.storage.createProject('New Project');
+        this.storage.setActiveProject(newProject.id);
+      } else {
+        if (isActive) {
+          const otherProject = projects.find(p => p.id !== projectId);
+          if (otherProject) {
+            this.storage.setActiveProject(otherProject.id);
+          }
         }
+        this.storage.deleteProject(projectId);
       }
       
-      this.storage.deleteProject(projectId);
       this.renderDeleteProjectList();
       this.refreshProjectUI();
       this.loadProjectCode();
