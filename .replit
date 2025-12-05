@@ -3,7 +3,7 @@ run = "kotlinc -d main.jar main.kt && kotlin -classpath main.jar MainKt"
 entrypoint = "main.kt"
 
 hidden=["*.jar"]
-modules = ["nodejs-20", "web", "nix"]
+modules = ["nodejs-20", "web"]
 
 [nix]
 channel = "stable-25_05"
@@ -50,3 +50,7 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 36537
+externalPort = 3000
