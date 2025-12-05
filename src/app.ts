@@ -724,31 +724,6 @@ export class App {
     }
   }
 
-  private deleteCurrentProjectFromSettings(): void {
-    const activeProject = this.storage.getActiveProject();
-    if (!activeProject) return;
-
-    const projects = this.storage.getProjects();
-    if (projects.length <= 1) {
-      this.showToast('Cannot delete the only project. Create a new project first.');
-      return;
-    }
-
-    const projectName = activeProject.name;
-    if (confirm(`Delete "${projectName}"? This action cannot be undone.`)) {
-      const deleted = this.storage.deleteProject(activeProject.id);
-      if (deleted) {
-        this.hideSettings();
-        this.refreshProjectUI();
-        this.loadProjectCode();
-        this.updateLivePreview();
-        this.showToast(`Deleted "${projectName}"`);
-      } else {
-        this.showToast('Failed to delete project');
-      }
-    }
-  }
-
   private toggleDeleteProjectList(): void {
     const deleteList = document.getElementById('deleteProjectList');
     if (!deleteList) return;
