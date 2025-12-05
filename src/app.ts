@@ -75,7 +75,7 @@ export class App {
       <header class="header">
         <div class="header-left">
           <div class="logo">
-            <img src="icons/app-logo.png" alt="Html Live Editer" class="logo-image">
+            <img src="./icons/app-logo.png" alt="Html Live Editer" class="logo-image">
             <span class="logo-text">Html Live Editer</span>
           </div>
           <div class="project-selector" id="projectSelector">

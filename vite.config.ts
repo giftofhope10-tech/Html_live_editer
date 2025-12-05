@@ -64,7 +64,7 @@ export default defineConfig({
     })
   ],
   build: {
-    target: 'esnext',
+    target: ['es2018', 'chrome70', 'safari12'],
     minify: 'esbuild',
     rollupOptions: {
       output: {
