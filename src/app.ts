@@ -837,9 +837,11 @@ export class App {
   }
 
   private closeSearchPanel(): void {
-    const panels = document.querySelectorAll('.cm-panels');
-    panels.forEach(panel => {
-      (panel as HTMLElement).style.display = 'none';
+    this.editors.forEach(editor => {
+      const closeBtn = editor.dom.querySelector('.cm-panel button[name="close"]');
+      if (closeBtn) {
+        (closeBtn as HTMLElement).click();
+      }
     });
   }
 

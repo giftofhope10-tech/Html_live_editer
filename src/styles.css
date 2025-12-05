@@ -1091,28 +1091,36 @@ body:has(.preview-container.active) .cm-panels {
   right: 0 !important;
   z-index: 1000 !important;
   max-height: none !important;
-  padding: 8px 12px !important;
+  padding: 12px !important;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
   border-top: 1px solid var(--border) !important;
   border-bottom: none !important;
 }
 
-.cm-panel {
+.cm-panel.cm-search {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.cm-panel.cm-search > div {
   display: flex !important;
   flex-wrap: wrap !important;
   gap: 8px !important;
   align-items: center !important;
 }
 
-.cm-panel input {
+.cm-panel input[type="text"],
+.cm-panel input:not([type]) {
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-sm) !important;
   padding: 10px 14px !important;
   font-size: 16px !important;
-  flex: 1 !important;
-  min-width: 120px !important;
+  flex: 1 1 150px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 .cm-panel button {
@@ -1120,27 +1128,38 @@ body:has(.preview-container.active) .cm-panels {
   color: white !important;
   border: none !important;
   border-radius: var(--radius-sm) !important;
-  padding: 10px 14px !important;
+  padding: 8px 12px !important;
   cursor: pointer !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.cm-panel button[name="close"] {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  padding: 8px !important;
+  min-width: 32px !important;
 }
 
 .cm-panel label {
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
   font-size: 12px !important;
   color: var(--text-secondary) !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .cm-panel input[type="checkbox"] {
   width: 16px !important;
   height: 16px !important;
   min-width: 16px !important;
-  flex: 0 !important;
+  flex: 0 0 auto !important;
   padding: 0 !important;
+  margin: 0 !important;
 }
 
 .cm-panel br {
