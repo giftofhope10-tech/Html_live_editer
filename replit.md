@@ -99,6 +99,12 @@ cd android
 
 ## Recent Changes
 
+- December 5, 2024: **Play Store Security Hardening** - Disabled allowUniversalAccessFromFileURLs and allowFileAccessFromFileURLs, set mixedContentMode to NEVER_ALLOW
+- December 5, 2024: **Android 11+ Scoped Storage** - Migrated downloads to MediaStore API with RELATIVE_PATH and streaming for memory efficiency
+- December 5, 2024: **AdMob SDK Initialization** - Added MobileAds.initialize() for proper ad integration
+- December 5, 2024: **In-App Updates** - Added Google Play Core for automatic flexible update flow
+- December 5, 2024: **Removed deprecated storage permissions** - WRITE/READ_EXTERNAL_STORAGE no longer needed with MediaStore
+- December 5, 2024: **Version updated to 1.1.0** (versionCode 2)
 - December 5, 2024: **Custom compact inline search bar** - Replaced CodeMirror's full-screen search panel with a compact top search bar
 - December 5, 2024: **Styled modal dialogs** - Replaced browser prompt() with custom styled modals for project create/rename
 - December 5, 2024: **High-precedence keymap** - Ctrl/Cmd+F now properly opens custom search bar using Prec.highest()
