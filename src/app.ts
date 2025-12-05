@@ -3,8 +3,8 @@ import { html } from '@codemirror/lang-html';
 import { css } from '@codemirror/lang-css';
 import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { EditorState } from '@codemirror/state';
-import { searchKeymap, highlightSelectionMatches, openSearchPanel } from '@codemirror/search';
+import { EditorState, Prec } from '@codemirror/state';
+import { highlightSelectionMatches, SearchQuery, findNext, findPrevious, setSearchQuery, search } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
 import { Storage } from './storage';
 import { Settings } from './settings';
@@ -20,6 +20,9 @@ export class App {
   private autoSaveTimeout: number | null = null;
   private isOnline: boolean = navigator.onLine;
   private showingInterstitial: boolean = false;
+  private modalMode: 'create' | 'rename' = 'create';
+  private renameProjectId: string | null = null;
+  private currentSearchQuery: string = '';
 
   constructor() {
     this.storage = new Storage();
@@ -300,6 +303,53 @@ export class App {
       <div class="offline-indicator" id="offlineIndicator">
         You're offline - changes saved locally
       </div>
+
+      <div class="custom-search-bar" id="customSearchBar">
+        <div class="search-bar-content">
+          <input type="text" id="searchInput" placeholder="Find..." autocomplete="off" />
+          <div class="search-bar-actions">
+            <button class="search-nav-btn" id="searchPrev" title="Previous">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15,18 9,12 15,6"></polyline>
+              </svg>
+            </button>
+            <button class="search-nav-btn" id="searchNext" title="Next">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9,6 15,12 9,18"></polyline>
+              </svg>
+            </button>
+            <button class="search-close-btn" id="searchClose" title="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-modal-overlay" id="projectModal">
+        <div class="custom-modal">
+          <div class="custom-modal-header">
+            <h3 id="modalTitle">New Project</h3>
+            <button class="modal-close-btn" id="modalClose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="custom-modal-body">
+            <label for="projectNameInput">Project name</label>
+            <input type="text" id="projectNameInput" placeholder="Enter project name" autocomplete="off" />
+            <span class="modal-hint">You can use extensions like .html, .css, .js, .ts</span>
+          </div>
+          <div class="custom-modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Create</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -452,11 +502,30 @@ export class App {
   }
 
   private createEditor(content: string, lang: string, isDark: boolean, parent: HTMLElement): EditorView {
+    const customSearchKeymap = Prec.highest(keymap.of([
+      {
+        key: 'Mod-f',
+        run: () => {
+          this.openSearch();
+          return true;
+        },
+        preventDefault: true
+      },
+      {
+        key: 'Escape',
+        run: () => {
+          this.closeSearch();
+          return false;
+        }
+      }
+    ]));
+
     const extensions = [
+      customSearchKeymap,
       basicSetup,
       EditorView.lineWrapping,
       highlightSelectionMatches(),
-      keymap.of(searchKeymap),
+      search({ top: true }),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           this.scheduleAutoSave();
@@ -641,6 +710,56 @@ export class App {
       this.hideInterstitialAd();
     });
 
+    document.getElementById('searchInput')?.addEventListener('input', (e) => {
+      this.handleSearchInput((e.target as HTMLInputElement).value);
+    });
+
+    document.getElementById('searchInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.searchPrevious();
+        } else {
+          this.searchNext();
+        }
+      } else if (e.key === 'Escape') {
+        this.closeSearch();
+      }
+    });
+
+    document.getElementById('searchNext')?.addEventListener('click', () => {
+      this.searchNext();
+    });
+
+    document.getElementById('searchPrev')?.addEventListener('click', () => {
+      this.searchPrevious();
+    });
+
+    document.getElementById('searchClose')?.addEventListener('click', () => {
+      this.closeSearch();
+    });
+
+    document.getElementById('modalClose')?.addEventListener('click', () => {
+      this.closeModal();
+    });
+
+    document.getElementById('modalCancel')?.addEventListener('click', () => {
+      this.closeModal();
+    });
+
+    document.getElementById('modalConfirm')?.addEventListener('click', () => {
+      this.confirmModal();
+    });
+
+    document.getElementById('projectNameInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.confirmModal();
+      } else if (e.key === 'Escape') {
+        this.closeModal();
+      }
+    });
+
     this.updateLivePreview();
   }
 
@@ -675,14 +794,9 @@ export class App {
   }
 
   private createNewProject(): void {
-    const name = prompt('Enter project name (you can use extensions like .html, .css, .js, .ts):', `Project ${this.storage.getProjects().length + 1}`);
-    if (name && name.trim()) {
-      this.saveCode();
-      const newProject = this.storage.createProject(name.trim());
-      this.refreshProjectUI();
-      this.loadProjectCode();
-      this.showToast(`Created "${newProject.name}"`);
-    }
+    this.modalMode = 'create';
+    this.renameProjectId = null;
+    this.showModal('New Project', `Project ${this.storage.getProjects().length + 1}`, 'Create');
   }
 
   private switchProject(projectId: string): void {
@@ -697,13 +811,9 @@ export class App {
     const project = this.storage.getProjects().find(p => p.id === projectId);
     if (!project) return;
 
-    const newName = prompt('Enter new project name (you can use extensions like .html, .css, .js, .ts):', project.name);
-    if (newName && newName.trim() && newName !== project.name) {
-      const trimmedName = newName.trim();
-      this.storage.renameProject(projectId, trimmedName);
-      this.refreshProjectUI();
-      this.showToast(`Renamed to "${trimmedName}"`);
-    }
+    this.modalMode = 'rename';
+    this.renameProjectId = projectId;
+    this.showModal('Rename Project', project.name, 'Rename');
   }
 
   private deleteProject(projectId: string): void {
@@ -1053,10 +1163,124 @@ export class App {
   }
 
   private openSearch(): void {
+    const searchBar = document.getElementById('customSearchBar');
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    if (searchBar && searchInput) {
+      searchBar.classList.add('active');
+      searchInput.focus();
+      searchInput.select();
+    }
+  }
+
+  private closeSearch(): void {
+    const searchBar = document.getElementById('customSearchBar');
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    if (searchBar) {
+      searchBar.classList.remove('active');
+    }
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    this.currentSearchQuery = '';
+    this.clearSearchHighlights();
+  }
+
+  private handleSearchInput(query: string): void {
+    this.currentSearchQuery = query;
+    const editor = this.editors.get(this.activeTab);
+    if (!editor) return;
+
+    if (query.trim()) {
+      const searchQuery = new SearchQuery({
+        search: query,
+        caseSensitive: false,
+        regexp: false,
+        wholeWord: false
+      });
+      editor.dispatch({ effects: setSearchQuery.of(searchQuery) });
+    } else {
+      this.clearSearchHighlights();
+    }
+  }
+
+  private searchNext(): void {
+    const editor = this.editors.get(this.activeTab);
+    if (editor && this.currentSearchQuery.trim()) {
+      findNext(editor);
+    }
+  }
+
+  private searchPrevious(): void {
+    const editor = this.editors.get(this.activeTab);
+    if (editor && this.currentSearchQuery.trim()) {
+      findPrevious(editor);
+    }
+  }
+
+  private clearSearchHighlights(): void {
     const editor = this.editors.get(this.activeTab);
     if (editor) {
-      openSearchPanel(editor);
+      const emptyQuery = new SearchQuery({
+        search: '',
+        caseSensitive: false,
+        regexp: false,
+        wholeWord: false
+      });
+      editor.dispatch({ effects: setSearchQuery.of(emptyQuery) });
     }
+  }
+
+  private showModal(title: string, defaultValue: string, confirmText: string): void {
+    const modal = document.getElementById('projectModal');
+    const titleEl = document.getElementById('modalTitle');
+    const input = document.getElementById('projectNameInput') as HTMLInputElement;
+    const confirmBtn = document.getElementById('modalConfirm');
+
+    if (modal && titleEl && input && confirmBtn) {
+      titleEl.textContent = title;
+      input.value = defaultValue;
+      confirmBtn.textContent = confirmText;
+      modal.classList.add('active');
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 50);
+    }
+  }
+
+  private closeModal(): void {
+    const modal = document.getElementById('projectModal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    this.renameProjectId = null;
+  }
+
+  private confirmModal(): void {
+    const input = document.getElementById('projectNameInput') as HTMLInputElement;
+    const name = input?.value?.trim();
+
+    if (!name) {
+      this.showToast('Please enter a project name');
+      return;
+    }
+
+    if (this.modalMode === 'create') {
+      this.saveCode();
+      const newProject = this.storage.createProject(name);
+      this.refreshProjectUI();
+      this.loadProjectCode();
+      this.showToast(`Created "${newProject.name}"`);
+    } else if (this.modalMode === 'rename' && this.renameProjectId) {
+      const project = this.storage.getProjects().find(p => p.id === this.renameProjectId);
+      if (project && name !== project.name) {
+        this.storage.renameProject(this.renameProjectId, name);
+        this.refreshProjectUI();
+        this.showToast(`Renamed to "${name}"`);
+      }
+    }
+
+    this.closeModal();
   }
 
   private handleFileUpload(e: Event): void {
