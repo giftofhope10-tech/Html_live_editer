@@ -403,7 +403,8 @@ export class App {
           <p>We may update this Privacy Policy periodically. We will notify you of any changes by updating the "Last Updated" date at the top of this policy.</p>
 
           <h3>8. Contact Us</h3>
-          <p>If you have any questions about this Privacy Policy, please contact us through the app's support channels.</p>
+          <p>If you have any questions about this Privacy Policy, please contact us at:</p>
+          <p><strong>Email:</strong> <a href="mailto:iftechstudio@gmail.com">iftechstudio@gmail.com</a></p>
         </div>
       </div>
     `;
@@ -468,7 +469,8 @@ export class App {
           <p>These terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles.</p>
 
           <h3>11. Contact</h3>
-          <p>For any questions regarding these Terms of Service, please contact us through the app's support channels.</p>
+          <p>For any questions regarding these Terms of Service, please contact us at:</p>
+          <p><strong>Email:</strong> <a href="mailto:iftechstudio@gmail.com">iftechstudio@gmail.com</a></p>
         </div>
       </div>
     `;
@@ -1329,21 +1331,69 @@ export class App {
     const mimeTypes: Record<string, string> = { html: 'text/html', css: 'text/css', js: 'application/javascript' };
     const ext = extensions[this.activeTab] || 'txt';
     const mimeType = mimeTypes[this.activeTab] || 'text/plain';
-    const filename = `code.${ext}`;
+    
+    const activeProject = this.storage.getActiveProject();
+    const projectName = activeProject ? activeProject.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'code';
+    const filename = `${projectName}.${ext}`;
 
     try {
-      const dataUrl = 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(content);
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = filename;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      this.showToast(`Downloading ${filename}`);
+      const isAndroidWebView = window.location.protocol === 'file:' || 
+                               /Android/i.test(navigator.userAgent);
+      
+      if (isAndroidWebView && (window as any).Android?.saveBase64File) {
+        const base64 = btoa(unescape(encodeURIComponent(content)));
+        (window as any).Android.saveBase64File(base64, filename, mimeType);
+        this.showToast(`Saving ${filename}...`);
+      } else {
+        const blob = new Blob([content], { type: mimeType });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        this.showToast(`Downloading ${filename}`);
+      }
     } catch (err) {
       console.error('Download failed:', err);
-      this.showToast('Download failed');
+      this.fallbackDownload(content, filename, mimeType);
+    }
+  }
+
+  private fallbackDownload(content: string, filename: string, mimeType: string): void {
+    try {
+      const blob = new Blob([content], { type: mimeType });
+      const reader = new FileReader();
+      
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        this.showToast(`Downloading ${filename}`);
+      };
+      
+      reader.onerror = () => {
+        this.showToast('Download failed - try copying code instead');
+      };
+      
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      console.error('Fallback download failed:', err);
+      this.showToast('Download failed - try copying code instead');
     }
   }
 

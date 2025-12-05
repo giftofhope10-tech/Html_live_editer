@@ -295,6 +295,23 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Download failed", Toast.LENGTH_SHORT).show()
             }
         }
+        
+        webView.addJavascriptInterface(AndroidBridge(), "Android")
+    }
+    
+    inner class AndroidBridge {
+        @android.webkit.JavascriptInterface
+        fun saveBase64File(base64Data: String, fileName: String, mimeType: String) {
+            try {
+                val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                saveToDownloads(bytes, fileName, mimeType)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Save failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
     
     private fun handleBlobDownload(url: String, fileName: String) {
