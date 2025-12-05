@@ -41,6 +41,7 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.gms.ads.MobileAds
 import com.iftechstudio.html_live_editor.R
 import java.io.File
 import java.io.FileOutputStream
@@ -72,6 +73,10 @@ class MainActivity : AppCompatActivity() {
         appUpdateManager = AppUpdateManagerFactory.create(this)
         appUpdateManager.registerListener(installStateUpdatedListener)
         checkForAppUpdate()
+        
+        MobileAds.initialize(this) { initializationStatus ->
+            Log.d("AdMob", "AdMob initialized: $initializationStatus")
+        }
         
         container = FrameLayout(this).apply {
             setBackgroundColor(Color.parseColor("#1a1a2e"))
