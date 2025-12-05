@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.svg'],
       manifest: {
-        name: 'HTML Live Editor',
-        short_name: 'HTML Editor',
+        name: 'Html Live Editer',
+        short_name: 'Html Editer',
         description: 'Mobile-friendly HTML, CSS, JavaScript Live Editor with offline support',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',
@@ -41,6 +41,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {

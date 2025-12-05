@@ -76,7 +76,7 @@ export class App {
               <polyline points="16,18 22,12 16,6"></polyline>
               <polyline points="8,6 2,12 8,18"></polyline>
             </svg>
-            <span class="logo-text">HTML Editor</span>
+            <span class="logo-text">Html Live Editer</span>
           </div>
           <div class="project-selector" id="projectSelector">
             <button class="project-selector-btn" id="projectSelectorBtn">
@@ -564,8 +564,8 @@ export class App {
       this.hideTerms();
     });
 
-    document.getElementById('deleteProjectBtn')?.addEventListener('click', () => {
-      this.deleteCurrentProjectFromSettings();
+    document.getElementById('showDeleteListBtn')?.addEventListener('click', () => {
+      this.toggleDeleteProjectList();
     });
 
     window.addEventListener('online', () => {
@@ -749,6 +749,100 @@ export class App {
     }
   }
 
+  private toggleDeleteProjectList(): void {
+    const deleteList = document.getElementById('deleteProjectList');
+    if (!deleteList) return;
+
+    const isVisible = deleteList.style.display !== 'none';
+    
+    if (isVisible) {
+      deleteList.style.display = 'none';
+    } else {
+      this.renderDeleteProjectList();
+      deleteList.style.display = 'block';
+    }
+  }
+
+  private renderDeleteProjectList(): void {
+    const deleteList = document.getElementById('deleteProjectList');
+    if (!deleteList) return;
+
+    const projects = this.storage.getProjects();
+    const activeId = this.storage.getActiveProjectId();
+
+    if (projects.length <= 1) {
+      deleteList.innerHTML = `
+        <div class="delete-project-item">
+          <div class="project-info">
+            <span class="project-name">No projects to delete</span>
+            <span class="project-status">Create more projects first</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    deleteList.innerHTML = projects.map(p => `
+      <div class="delete-project-item" data-project-id="${p.id}">
+        <div class="project-info">
+          <span class="project-name">${p.name}</span>
+          <span class="project-status ${p.id === activeId ? 'active' : ''}">${p.id === activeId ? 'Active Project' : 'Tap to delete'}</span>
+        </div>
+        <button class="delete-btn delete-project-from-list" data-project-id="${p.id}" title="Delete ${p.name}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3,6 5,6 21,6"></polyline>
+            <path d="M19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"></path>
+          </svg>
+        </button>
+      </div>
+    `).join('');
+
+    this.bindDeleteListEvents();
+  }
+
+  private bindDeleteListEvents(): void {
+    document.querySelectorAll('.delete-project-from-list').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const target = e.currentTarget as HTMLElement;
+        const projectId = target.dataset.projectId;
+        if (projectId) this.deleteProjectFromList(projectId);
+      });
+    });
+  }
+
+  private deleteProjectFromList(projectId: string): void {
+    const projects = this.storage.getProjects();
+    if (projects.length <= 1) {
+      this.showToast('Cannot delete the only project');
+      return;
+    }
+
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    if (confirm(`Delete "${project.name}"? This cannot be undone.`)) {
+      const wasActive = this.storage.getActiveProjectId() === projectId;
+      this.storage.deleteProject(projectId);
+      this.renderDeleteProjectList();
+      this.refreshProjectUI();
+      
+      if (wasActive) {
+        this.loadProjectCode();
+        this.updateLivePreview();
+      }
+      
+      this.showToast(`Deleted "${project.name}"`);
+    }
+  }
+
+  private closeSearchPanel(): void {
+    const panels = document.querySelectorAll('.cm-panels');
+    panels.forEach(panel => {
+      (panel as HTMLElement).style.display = 'none';
+    });
+  }
+
   private refreshProjectUI(): void {
     const projectList = document.getElementById('projectList');
     if (projectList) {
@@ -878,6 +972,7 @@ export class App {
 
   private showPreview(): void {
     this.saveCode();
+    this.closeSearchPanel();
 
     const html = this.editors.get('html')?.state.doc.toString() || '';
     const css = this.editors.get('css')?.state.doc.toString() || '';

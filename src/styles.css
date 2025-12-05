@@ -679,6 +679,15 @@ body {
   display: flex;
 }
 
+.preview-container.active ~ .cm-panels,
+.preview-container.active .cm-panels {
+  display: none !important;
+}
+
+body:has(.preview-container.active) .cm-panels {
+  display: none !important;
+}
+
 .preview-header {
   height: var(--header-height);
   background: var(--bg-secondary);
@@ -1075,6 +1084,24 @@ body {
 .cm-panels {
   background: var(--bg-secondary) !important;
   border-color: var(--border) !important;
+  position: fixed !important;
+  top: auto !important;
+  bottom: 60px !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  max-height: none !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+  border-top: 1px solid var(--border) !important;
+  border-bottom: none !important;
+}
+
+.cm-panel {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
 }
 
 .cm-panel input {
@@ -1082,7 +1109,10 @@ body {
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-sm) !important;
-  padding: 6px 10px !important;
+  padding: 10px 14px !important;
+  font-size: 16px !important;
+  flex: 1 !important;
+  min-width: 120px !important;
 }
 
 .cm-panel button {
@@ -1090,8 +1120,31 @@ body {
   color: white !important;
   border: none !important;
   border-radius: var(--radius-sm) !important;
-  padding: 6px 12px !important;
+  padding: 10px 14px !important;
   cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.cm-panel label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 12px !important;
+  color: var(--text-secondary) !important;
+  white-space: nowrap !important;
+}
+
+.cm-panel input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  flex: 0 !important;
+  padding: 0 !important;
+}
+
+.cm-panel br {
+  display: none !important;
 }
 
 .cm-searchMatch {
@@ -1100,6 +1153,69 @@ body {
 
 .cm-searchMatch-selected {
   background: rgba(99, 102, 241, 0.5) !important;
+}
+
+.delete-project-list {
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+
+.delete-project-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-tertiary);
+}
+
+.delete-project-item:last-child {
+  border-bottom: none;
+}
+
+.delete-project-item .project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.delete-project-item .project-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.delete-project-item .project-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.delete-project-item .project-status.active {
+  color: var(--success);
+}
+
+.delete-project-item .delete-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-project-item .delete-btn:hover {
+  background: var(--error);
+  color: white;
+}
+
+.delete-project-item .delete-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 @media (min-width: 768px) {
@@ -1155,4 +1271,69 @@ body {
 .delete-btn:hover, .delete-btn:active {
   background: var(--error) !important;
   color: white !important;
+}
+
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary);
+  z-index: 9999;
+  padding: 12px 16px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.update-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.update-content span {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.update-content button {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+#updateNowBtn {
+  background: white;
+  color: var(--primary);
+  border: none;
+}
+
+#updateNowBtn:hover {
+  background: #f0f0f0;
+}
+
+#updateLaterBtn {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+#updateLaterBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
 }

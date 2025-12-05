@@ -69,18 +69,19 @@ export class Settings {
 
           <div class="settings-section">
             <div class="settings-section-title">Project</div>
-            <div class="settings-item">
+            <div class="settings-item" id="deleteProjectSection">
               <div class="settings-item-info">
-                <div class="settings-item-title">Delete Current Project</div>
-                <div class="settings-item-desc">Permanently delete the active project</div>
+                <div class="settings-item-title">Delete Project</div>
+                <div class="settings-item-desc">Select a project to delete</div>
               </div>
-              <button class="icon-btn delete-btn" id="deleteProjectBtn" aria-label="Delete project">
+              <button class="icon-btn delete-btn" id="showDeleteListBtn" aria-label="Show delete options">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3,6 5,6 21,6"></polyline>
                   <path d="M19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"></path>
                 </svg>
               </button>
             </div>
+            <div class="delete-project-list" id="deleteProjectList" style="display: none;"></div>
           </div>
 
           <div class="settings-section">
@@ -107,8 +108,8 @@ export class Settings {
             <div class="settings-section-title">About</div>
             <div class="settings-item">
               <div class="settings-item-info">
-                <div class="settings-item-title">HTML Live Editor</div>
-                <div class="settings-item-desc">Version 1.0.0</div>
+                <div class="settings-item-title">Html Live Editer</div>
+                <div class="settings-item-desc">Version 1.0.1</div>
               </div>
             </div>
           </div>
