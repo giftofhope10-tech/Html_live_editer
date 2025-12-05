@@ -99,6 +99,10 @@ cd android
 
 ## Recent Changes
 
+- December 5, 2024: Added file upload support (onShowFileChooser) for Android WebView
+- December 5, 2024: Added file download support (DownloadListener) for Android WebView
+- December 5, 2024: Fixed window insets - content no longer hidden behind status/nav bars
+- December 5, 2024: Fixed asset paths to use relative URLs for Android WebView
 - December 5, 2024: Fixed Android app crash - MainActivity package reference in AndroidManifest.xml
 - December 5, 2024: Removed missing google_play_services_version integer reference
 - December 4, 2024: Added Delete Project feature in Settings (replaced Clear Code)
