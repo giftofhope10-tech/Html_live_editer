@@ -32,6 +32,7 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation"
             android:launchMode="singleTop"
             android:screenOrientation="unspecified"
+            android:theme="@style/Theme.HTMLEditor.Splash"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

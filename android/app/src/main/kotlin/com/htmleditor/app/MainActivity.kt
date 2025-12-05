@@ -29,6 +29,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
+import com.htmleditor.app.R
 import java.io.File
 import java.io.FileOutputStream
 
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_HTMLEditor)
         super.onCreate(savedInstanceState)
         
         setupFileChooserLauncher()
