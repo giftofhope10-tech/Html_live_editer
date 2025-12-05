@@ -75,10 +75,7 @@ export class App {
       <header class="header">
         <div class="header-left">
           <div class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="16,18 22,12 16,6"></polyline>
-              <polyline points="8,6 2,12 8,18"></polyline>
-            </svg>
+            <img src="icons/app-logo.png" alt="Html Live Editer" class="logo-image">
             <span class="logo-text">Html Live Editer</span>
           </div>
           <div class="project-selector" id="projectSelector">

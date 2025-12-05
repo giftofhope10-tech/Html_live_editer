@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*.svg'],
+      includeAssets: ['icons/*.svg', 'icons/*.png'],
       manifest: {
         name: 'Html Live Editer',
         short_name: 'Html Editer',
