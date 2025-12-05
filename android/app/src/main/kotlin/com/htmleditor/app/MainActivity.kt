@@ -215,9 +215,9 @@ class MainActivity : AppCompatActivity() {
             allowFileAccess = true
             allowContentAccess = true
             @Suppress("DEPRECATION")
-            allowFileAccessFromFileURLs = false
+            allowFileAccessFromFileURLs = true
             @Suppress("DEPRECATION")
-            allowUniversalAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = true
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             setSupportZoom(true)
             builtInZoomControls = true
