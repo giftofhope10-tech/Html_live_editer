@@ -7,6 +7,8 @@ workflows:
     environment:
       java: 17
       node: 20
+      android_signing:
+        - keystore_reference
       vars:
         PACKAGE_NAME: "com.iftechstudio.html_live_editor"
     
