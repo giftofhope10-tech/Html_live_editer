@@ -1,4 +1,4 @@
-# Html_Live_Editor
+# Html Live Editer
 
 **Package Name:** `com.iftechstudio.html_live_editor`
 
@@ -99,6 +99,12 @@ cd android
 
 ## Recent Changes
 
+- December 5, 2024: **App renamed to "Html Live Editer"**
+- December 5, 2024: Fixed search bar visibility - now positioned above keyboard on mobile
+- December 5, 2024: Search bar hidden when Live Preview is open
+- December 5, 2024: Added project selection list in Delete section - can choose which project to delete
+- December 5, 2024: Fixed PWA update mechanism - updates now apply properly with skipWaiting and clientsClaim
+- December 5, 2024: Added update banner UI for better user experience when new version available
 - December 5, 2024: Added file upload support (onShowFileChooser) for Android WebView
 - December 5, 2024: Added file download support (DownloadListener) for Android WebView
 - December 5, 2024: Fixed window insets - content no longer hidden behind status/nav bars
