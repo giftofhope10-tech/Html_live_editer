@@ -13,6 +13,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Base64
 import android.util.Log
+import android.provider.MediaStore
+import android.content.ContentValues
 import android.view.View
 import android.webkit.DownloadListener
 import android.webkit.ValueCallback
@@ -208,16 +210,16 @@ class MainActivity : AppCompatActivity() {
             allowFileAccess = true
             allowContentAccess = true
             @Suppress("DEPRECATION")
-            allowFileAccessFromFileURLs = true
+            allowFileAccessFromFileURLs = false
             @Suppress("DEPRECATION")
-            allowUniversalAccessFromFileURLs = true
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            allowUniversalAccessFromFileURLs = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
             loadWithOverviewMode = true
             useWideViewPort = true
-            mediaPlaybackRequiresUserGesture = false
+            mediaPlaybackRequiresUserGesture = true
         }
 
         webView.setBackgroundColor(Color.parseColor("#1a1a2e"))
@@ -279,19 +281,41 @@ class MainActivity : AppCompatActivity() {
                 if (url.startsWith("blob:") || url.startsWith("data:")) {
                     handleBlobDownload(url)
                 } else {
-                    val request = DownloadManager.Request(Uri.parse(url)).apply {
-                        setMimeType(mimeType)
-                        addRequestHeader("User-Agent", userAgent)
-                        setDescription("Downloading file...")
-                        setTitle(getFileNameFromDisposition(contentDisposition) ?: "download")
-                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, 
-                            getFileNameFromDisposition(contentDisposition) ?: "download")
-                    }
+                    val fileName = getFileNameFromDisposition(contentDisposition) ?: "download"
                     
-                    val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                    dm.enqueue(request)
-                    Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        Thread {
+                            try {
+                                val connection = java.net.URL(url).openConnection()
+                                connection.setRequestProperty("User-Agent", userAgent)
+                                connection.connect()
+                                
+                                val inputStream = connection.getInputStream()
+                                val bytes = inputStream.readBytes()
+                                inputStream.close()
+                                
+                                saveToDownloads(bytes, fileName, mimeType ?: "application/octet-stream")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                runOnUiThread {
+                                    Toast.makeText(this, "Download failed", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }.start()
+                    } else {
+                        val request = DownloadManager.Request(Uri.parse(url)).apply {
+                            setMimeType(mimeType)
+                            addRequestHeader("User-Agent", userAgent)
+                            setDescription("Downloading file...")
+                            setTitle(fileName)
+                            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            setDestinationInExternalFilesDir(this@MainActivity, Environment.DIRECTORY_DOWNLOADS, fileName)
+                        }
+                        
+                        val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                        dm.enqueue(request)
+                        Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -323,13 +347,7 @@ class MainActivity : AppCompatActivity() {
             fun saveBase64File(base64Data: String, fileName: String) {
                 try {
                     val bytes = Base64.decode(base64Data, Base64.DEFAULT)
-                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    val file = File(downloadsDir, fileName)
-                    FileOutputStream(file).use { it.write(bytes) }
-                    
-                    runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Saved to Downloads: $fileName", Toast.LENGTH_SHORT).show()
-                    }
+                    saveToDownloads(bytes, fileName, "text/plain")
                 } catch (e: Exception) {
                     e.printStackTrace()
                     runOnUiThread {
@@ -340,6 +358,46 @@ class MainActivity : AppCompatActivity() {
         }, "Android")
         
         webView.evaluateJavascript(script, null)
+    }
+    
+    private fun saveToDownloads(bytes: ByteArray, fileName: String, mimeType: String) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                
+                val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                uri?.let {
+                    contentResolver.openOutputStream(it)?.use { outputStream ->
+                        outputStream.write(bytes)
+                    }
+                    
+                    values.clear()
+                    values.put(MediaStore.Downloads.IS_PENDING, 0)
+                    contentResolver.update(it, values, null, null)
+                    
+                    runOnUiThread {
+                        Toast.makeText(this, "Saved to Downloads: $fileName", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                val file = File(downloadsDir, fileName)
+                FileOutputStream(file).use { it.write(bytes) }
+                
+                runOnUiThread {
+                    Toast.makeText(this, "Saved to Downloads: $fileName", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            runOnUiThread {
+                Toast.makeText(this, "Save failed", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     private fun getFileNameFromDisposition(contentDisposition: String?): String? {

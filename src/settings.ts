@@ -109,7 +109,7 @@ export class Settings {
             <div class="settings-item">
               <div class="settings-item-info">
                 <div class="settings-item-title">Html Live Editer</div>
-                <div class="settings-item-desc">Version 1.0.1</div>
+                <div class="settings-item-desc">Version 1.1.0</div>
               </div>
             </div>
           </div>
