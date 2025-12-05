@@ -868,7 +868,7 @@ export class App {
       <div class="delete-project-item" data-project-id="${p.id}">
         <div class="project-info">
           <span class="project-name">${p.name}</span>
-          <span class="project-status ${p.id === activeId ? 'active' : ''}">${p.id === activeId ? 'Active Project' : 'Tap to delete'}</span>
+          <span class="project-status ${p.id === activeId ? 'active' : ''}">${p.id === activeId ? 'Current - Tap to delete' : 'Tap to delete'}</span>
         </div>
         <button class="delete-btn delete-project-from-list" data-project-id="${p.id}" title="Delete ${p.name}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -903,16 +903,24 @@ export class App {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    if (confirm(`Delete "${project.name}"? This cannot be undone.`)) {
-      const wasActive = this.storage.getActiveProjectId() === projectId;
+    const isActive = this.storage.getActiveProjectId() === projectId;
+    const confirmMsg = isActive 
+      ? `Delete "${project.name}" (current project)? This cannot be undone.`
+      : `Delete "${project.name}"? This cannot be undone.`;
+
+    if (confirm(confirmMsg)) {
+      if (isActive) {
+        const otherProject = projects.find(p => p.id !== projectId);
+        if (otherProject) {
+          this.storage.setActiveProject(otherProject.id);
+        }
+      }
+      
       this.storage.deleteProject(projectId);
       this.renderDeleteProjectList();
       this.refreshProjectUI();
-      
-      if (wasActive) {
-        this.loadProjectCode();
-        this.updateLivePreview();
-      }
+      this.loadProjectCode();
+      this.updateLivePreview();
       
       this.showToast(`Deleted "${project.name}"`);
     }
@@ -1312,16 +1320,25 @@ export class App {
 
     const content = editor.state.doc.toString();
     const extensions: Record<string, string> = { html: 'html', css: 'css', js: 'js' };
+    const mimeTypes: Record<string, string> = { html: 'text/html', css: 'text/css', js: 'application/javascript' };
     const ext = extensions[this.activeTab] || 'txt';
+    const mimeType = mimeTypes[this.activeTab] || 'text/plain';
     const filename = `code.${ext}`;
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const dataUrl = 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(content);
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      this.showToast(`Downloading ${filename}`);
+    } catch (err) {
+      console.error('Download failed:', err);
+      this.showToast('Download failed');
+    }
   }
 
   private async copyCurrentCode(): Promise<void> {
