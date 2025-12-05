@@ -99,6 +99,9 @@ cd android
 
 ## Recent Changes
 
+- December 5, 2024: **Custom compact inline search bar** - Replaced CodeMirror's full-screen search panel with a compact top search bar
+- December 5, 2024: **Styled modal dialogs** - Replaced browser prompt() with custom styled modals for project create/rename
+- December 5, 2024: **High-precedence keymap** - Ctrl/Cmd+F now properly opens custom search bar using Prec.highest()
 - December 5, 2024: **App renamed to "Html Live Editer"**
 - December 5, 2024: Fixed search bar visibility - now positioned above keyboard on mobile
 - December 5, 2024: Search bar hidden when Live Preview is open
