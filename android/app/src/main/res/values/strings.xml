@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Html_Live_Editor</string>
+    <string name="app_name">Html Live Editer</string>
     <string name="app_description">Mobile-friendly HTML, CSS, JavaScript Live Editor with offline support</string>
 
     <!-- Asset Statements for TWA verification -->
