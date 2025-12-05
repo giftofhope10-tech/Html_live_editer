@@ -5,12 +5,14 @@ import android.app.Activity
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Base64
+import android.util.Log
 import android.view.View
 import android.webkit.DownloadListener
 import android.webkit.ValueCallback
@@ -29,7 +31,15 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
-import com.htmleditor.app.R
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
+import com.iftechstudio.html_live_editor.R
 import java.io.File
 import java.io.FileOutputStream
 
@@ -41,12 +51,25 @@ class MainActivity : AppCompatActivity() {
     
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
+    
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val UPDATE_REQUEST_CODE = 100
+    
+    private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            showUpdateSnackbar()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_HTMLEditor)
         super.onCreate(savedInstanceState)
         
         setupFileChooserLauncher()
+        
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+        appUpdateManager.registerListener(installStateUpdatedListener)
+        checkForAppUpdate()
         
         container = FrameLayout(this).apply {
             setBackgroundColor(Color.parseColor("#1a1a2e"))
@@ -71,6 +94,60 @@ class MainActivity : AppCompatActivity() {
         } else {
             webView.loadUrl(LOCAL_URL)
         }
+    }
+    
+    private fun checkForAppUpdate() {
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+        
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                    startFlexibleUpdate(appUpdateInfo)
+                } else if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    startImmediateUpdate(appUpdateInfo)
+                }
+            } else if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
+                showUpdateSnackbar()
+            }
+        }.addOnFailureListener { e ->
+            Log.e("AppUpdate", "Update check failed", e)
+        }
+    }
+    
+    private fun startFlexibleUpdate(appUpdateInfo: AppUpdateInfo) {
+        try {
+            appUpdateManager.startUpdateFlowForResult(
+                appUpdateInfo,
+                this,
+                AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
+                UPDATE_REQUEST_CODE
+            )
+        } catch (e: IntentSender.SendIntentException) {
+            Log.e("AppUpdate", "Flexible update failed", e)
+        }
+    }
+    
+    private fun startImmediateUpdate(appUpdateInfo: AppUpdateInfo) {
+        try {
+            appUpdateManager.startUpdateFlowForResult(
+                appUpdateInfo,
+                this,
+                AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
+                UPDATE_REQUEST_CODE
+            )
+        } catch (e: IntentSender.SendIntentException) {
+            Log.e("AppUpdate", "Immediate update failed", e)
+        }
+    }
+    
+    private fun showUpdateSnackbar() {
+        Toast.makeText(
+            this,
+            "Update downloaded. Restart to apply.",
+            Toast.LENGTH_LONG
+        ).show()
+        
+        appUpdateManager.completeUpdate()
     }
 
     private fun setupFileChooserLauncher() {
@@ -289,6 +366,15 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+        
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
+                showUpdateSnackbar()
+            }
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                startImmediateUpdate(appUpdateInfo)
+            }
+        }
     }
 
     override fun onPause() {
@@ -297,7 +383,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        appUpdateManager.unregisterListener(installStateUpdatedListener)
         webView.destroy()
         super.onDestroy()
+    }
+    
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == UPDATE_REQUEST_CODE) {
+            if (resultCode != RESULT_OK) {
+                Log.e("AppUpdate", "Update flow failed! Result code: $resultCode")
+                checkForAppUpdate()
+            }
+        }
     }
 }
