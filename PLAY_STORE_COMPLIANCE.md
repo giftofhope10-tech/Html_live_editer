@@ -1,24 +1,24 @@
 # Play Store Compliance Report
 
-## HTML Live Editor - Version 1.0.0
-**Report Date:** December 4, 2024  
-**Target SDK:** 35 (Android 15)  
+## HTML Live Editor - Version 1.2.0 (Ad-Free)
+**Report Date:** April 11, 2026
+**Target SDK:** 35 (Android 15)
 **Minimum SDK:** 24 (Android 7.0)
 
 ---
 
 ## Project Type
 
-This is a **Progressive Web App (PWA)** with Android wrapper template files included.
+This is a **Progressive Web App (PWA)** with Android WebView wrapper.
 - The PWA runs directly in browsers and can be installed on devices
-- Android files provide a WebView wrapper template for Play Store distribution
+- Android files provide a WebView wrapper for Play Store distribution
 - Build the Android project in Android Studio to create APK/AAB
 
 ---
 
 ## 1. SDK & API Compliance
 
-### Target SDK 35 Requirements ✅
+### Target SDK 35 Requirements
 - [x] compileSdk set to 35
 - [x] targetSdk set to 35
 - [x] minSdk set to 24 (supports 98%+ of devices)
@@ -27,7 +27,7 @@ This is a **Progressive Web App (PWA)** with Android wrapper template files incl
 - [x] Android Gradle Plugin 8.2.2
 - [x] Gradle 8.5 wrapper configured
 
-### API Level Compatibility ✅
+### API Level Compatibility
 - [x] Package visibility queries declared in AndroidManifest.xml
 - [x] Exported activities explicitly declared
 - [x] Network security configuration for SDK 35
@@ -38,63 +38,65 @@ This is a **Progressive Web App (PWA)** with Android wrapper template files incl
 
 ## 2. Privacy & Data Safety
 
-### Data Collection Declaration ✅
+### Data Collection Declaration
 - [x] **Local Storage Only**: All user code stored locally in localStorage
 - [x] **No Personal Data Collection**: App does not collect names, emails, or identifiers
 - [x] **No Server Communication**: Code never leaves the device
-- [x] **AdMob Integration**: Disclosed advertising data collection
+- [x] **No Advertising**: App is completely ad-free — no AdMob or any third-party ads
+- [x] **No AD_ID Permission**: AD_ID permission removed — not applicable for ad-free apps
 
-### Privacy Policy ✅
-- [x] Effective Date: December 4, 2024
-- [x] Last Updated: December 4, 2024
-- [x] Information collection disclosure
-- [x] Third-party services (AdMob) disclosure
-- [x] Children's privacy (COPPA) compliance
-- [x] User rights and data control
+### Privacy Policy
+- [x] No Third-Party Advertising (ad-free)
+- [x] Local storage only — no data leaves the device
+- [x] Children's privacy (COPPA) compliant
+- [x] User rights and data control documented
 
-### Terms of Service ✅
-- [x] Effective Date: December 4, 2024
+### Terms of Service
 - [x] Service description
 - [x] User responsibilities
 - [x] Intellectual property
-- [x] Advertising disclosure
+- [x] No advertising terms — app is ad-free
 - [x] Limitation of liability
 
 ---
 
 ## 3. App Security
 
-### ProGuard/R8 Configuration ✅
+### ProGuard/R8 Configuration
 - [x] minifyEnabled for release builds
 - [x] shrinkResources enabled
 - [x] proguard-rules.pro configured
 - [x] Mapping file generation enabled
 - [x] Debug logging removed in release
 
-### Network Security ✅
+### Network Security
 - [x] usesCleartextTraffic="false"
 - [x] network_security_config.xml configured
 - [x] HTTPS enforced for all connections
 
-### Permissions ✅
-- [x] INTERNET - Required for PWA
-- [x] ACCESS_NETWORK_STATE - Offline detection
-- [x] AD_ID - AdMob requirement
-- [x] No unnecessary permissions
+### Permissions
+- [x] INTERNET — Required for PWA functionality
+- [x] ACCESS_NETWORK_STATE — Offline detection
+- [x] No unnecessary permissions (AD_ID removed)
 
 ---
 
 ## 4. Content & Features
 
-### App Content ✅
-- [x] Code editor with syntax highlighting
+### App Content
+- [x] Code editor with syntax highlighting (HTML, CSS, JavaScript)
 - [x] Live preview functionality
-- [x] HTML, CSS, JavaScript support
 - [x] Dark/Light theme toggle
 - [x] Auto-save functionality
 - [x] Offline PWA support
+- [x] Font size controls (10–28px)
+- [x] Word wrap toggle
+- [x] Device preview simulation (Desktop/Tablet/Mobile)
+- [x] Status bar (line/col, language, font size)
+- [x] File upload and download
+- [x] Responsive layout for phone, tablet, laptop, PC, TV
 
-### Accessibility ✅
+### Accessibility
 - [x] Content descriptions for all interactive elements
 - [x] Touch targets minimum 48dp
 - [x] Color contrast ratios maintained
@@ -102,35 +104,24 @@ This is a **Progressive Web App (PWA)** with Android wrapper template files incl
 
 ---
 
-## 5. Advertising Compliance
+## 5. Advertising
 
-### AdMob Implementation ✅
-- [x] AdMob SDK 23.3.0 integrated
-- [x] Application ID placeholder configured
-- [x] Interstitial ads with timer
-- [x] Banner ad placement
-- [x] Personalization consent ready
-
-### Ad Policy Compliance ✅
-- [x] Ads not placed near interactive elements
-- [x] Clear close button on interstitials
-- [x] No accidental clicks design
-- [x] Ad frequency limits (2-hour intervals)
+### Ad-Free Declaration
+- [x] **Zero ads** — AdMob completely removed from PWA and Android wrapper
+- [x] No banner ads, no interstitial ads, no rewarded ads
+- [x] No third-party ad SDKs in dependencies
+- [x] No AD_ID permission in AndroidManifest
+- [x] Privacy policy reflects ad-free status
 
 ---
 
 ## 6. Build & Release
 
-### Release Build Configuration ✅
+### Release Build Configuration
 - [x] Signed APK/AAB support
 - [x] R8 full mode enabled
 - [x] Mapping file output configured
 - [x] Bundle configuration for Play Store
-
-### Mapping File Location
-```
-build/outputs/mapping/release/mapping.txt
-```
 
 ### Build Commands
 ```bash
@@ -140,75 +131,55 @@ build/outputs/mapping/release/mapping.txt
 # Release build (requires signing config)
 ./gradlew bundleRelease
 
-# Generate mapping file
-./gradlew assembleRelease
-# Mapping file: app/build/outputs/mapping/release/mapping.txt
+# Mapping file location
+app/build/outputs/mapping/release/mapping.txt
 ```
 
 ---
 
 ## 7. Store Listing Requirements
 
-### Required Assets
-- [x] App icon (512x512 PNG)
-- [x] Feature graphic (1024x500 PNG)
-- [x] Screenshots (minimum 2)
-- [ ] App description (4000 chars max)
-- [ ] Short description (80 chars max)
-
-### Content Rating
-- **Category:** Tools/Productivity
-- **Target Audience:** All ages
-- **Contains Ads:** Yes
-- **In-App Purchases:** No
+| Requirement | Status |
+|---|---|
+| App icon (512x512) | Ready — public/icons/icon-512.png |
+| Feature graphic (1024x500) | Prepare before submission |
+| Screenshots (min 2) | Prepare before submission |
+| Short description (80 chars) | Prepare before submission |
+| Full description | Prepare before submission |
+| Privacy policy URL | Required — host your policy online |
+| Content rating | Complete questionnaire in Play Console |
 
 ---
 
 ## 8. Compliance Checklist Summary
 
 | Category | Status | Notes |
-|----------|--------|-------|
-| SDK 35 Target | ✅ Complete | All requirements met |
-| Privacy Policy | ✅ Complete | December 4, 2024 |
-| Terms of Service | ✅ Complete | December 4, 2024 |
-| Data Safety | ✅ Complete | Local storage only |
-| ProGuard/R8 | ✅ Complete | Mapping file ready |
-| Permissions | ✅ Complete | Minimal permissions |
-| AdMob | ✅ Complete | Compliant implementation |
-| Accessibility | ✅ Complete | WCAG guidelines followed |
-| Security | ✅ Complete | HTTPS enforced |
+|---|---|---|
+| SDK 35 Target | Complete | All requirements met |
+| Privacy Policy | Complete | Ad-free, local storage only |
+| Terms of Service | Complete | Updated April 2026 |
+| Data Safety | Complete | No data collection |
+| ProGuard/R8 | Complete | Mapping file ready |
+| Permissions | Complete | Minimal (INTERNET + NETWORK_STATE only) |
+| Advertising | Complete | Fully ad-free, no AdMob |
+| Accessibility | Complete | WCAG guidelines followed |
+| Security | Complete | HTTPS enforced |
 
 ---
 
-## 9. Play Store Approval Readiness
+## 9. Play Store Readiness
 
-**PWA Status: 100% READY** - The web app is fully functional
+**PWA Status: 100% READY** — Fully functional and ad-free
 
-**Android Wrapper Status: TEMPLATE READY** - Build in Android Studio
-
-### What's Ready:
-- [x] PWA fully functional with all features
-- [x] Privacy policy and terms updated (December 4, 2024)
-- [x] Android SDK 35 configuration files
-- [x] MainActivity WebView wrapper
-- [x] ProGuard/R8 rules configured
-- [x] Gradle wrapper configured
+**Android Wrapper Status: TEMPLATE READY** — Build in Android Studio
 
 ### Before Play Store Submission:
 - [ ] Open android/ folder in Android Studio
 - [ ] Add app icon resources (ic_launcher)
-- [ ] Replace AdMob placeholder with real App ID
-- [ ] Update PWA_URL in MainActivity to your hosted URL
+- [ ] Update LOCAL_URL in MainActivity to your hosted PWA URL
 - [ ] Generate signed release APK/AAB
-- [ ] Complete Data Safety form in Play Console
-
----
-
-## 10. Post-Submission Checklist
-
+- [ ] Host privacy policy online and add URL to Play Console
 - [ ] Complete Data Safety form in Play Console
 - [ ] Upload mapping.txt for crash reporting
 - [ ] Set content rating questionnaire
 - [ ] Configure app pricing and distribution
-- [ ] Enable pre-launch report
-- [ ] Review store listing for policy compliance

@@ -43,13 +43,6 @@
 }
 
 #-------------------------------------------------
-# Google AdMob
-#-------------------------------------------------
--keep class com.google.android.gms.ads.** { *; }
--keep class com.google.ads.** { *; }
--dontwarn com.google.android.gms.ads.**
-
-#-------------------------------------------------
 # Google Play Core
 #-------------------------------------------------
 -keep class com.google.android.play.core.** { *; }
