@@ -2,24 +2,31 @@
 
 **Package Name:** `com.iftechstudio.html_live_editor`
 
-A mobile-friendly Progressive Web App (PWA) for editing and previewing HTML, CSS, and JavaScript code with live preview functionality.
+A cross-device Progressive Web App (PWA) for editing and previewing HTML, CSS, and JavaScript code with live preview functionality. Fully ad-free.
 
 ## Overview
 
-This is a fully-featured code editor designed for mobile and desktop use. It works offline as a PWA and can be installed on Android devices. The app is 100% Play Store compliant with SDK 35 targeting.
+A fully-featured code editor designed for every screen size — phone, tablet, laptop, desktop PC, and TV. Works offline as a PWA and can be installed on Android devices.
 
 ## Features
 
-- **Code Editor**: Full-featured code editor with syntax highlighting for HTML, CSS, and JavaScript using CodeMirror 6
-- **Live Preview**: Instantly preview your HTML/CSS/JS code with the Preview button in the top right corner
+- **Code Editor**: Full-featured editor with syntax highlighting for HTML, CSS, and JavaScript using CodeMirror 6
+- **Live Preview**: Side-by-side live preview that updates as you type, plus a full-screen Preview mode
+- **Device Preview Simulation**: Preview at Desktop, Tablet, and Mobile sizes directly in the live preview panel
+- **Status Bar**: Shows real-time cursor line/column, total lines, active language, and current font size
+- **Font Size Control**: Adjust editor font size (10–28px) via sidebar, quick actions, or Ctrl+=/- shortcuts. Saved per session.
+- **Word Wrap Toggle**: Toggle line wrapping in Settings
 - **Auto-Save**: Code is automatically saved to localStorage as you type
 - **Offline Support**: Works offline as a Progressive Web App (PWA) with service worker caching
 - **Dark/Light Mode**: Toggle between dark and light themes in Settings
-- **Mobile-First Design**: Responsive layout optimized for mobile devices
+- **Keyboard Shortcuts Panel**: All shortcuts listed in Settings
+- **Multi-Project**: Create, rename, delete multiple projects
 - **Tab-Based Navigation**: Switch between HTML, CSS, and JavaScript editors
-- **Settings Page**: Access dark mode toggle, clear data, and legal pages
-- **Privacy Policy & Terms**: Play Store compliant legal pages (December 4, 2024)
-- **AdMob Integration**: Test banner placeholder for advertising
+- **File Upload/Download**: Upload and download individual files
+- **Code Snippets**: Quick-insert toolbar for common symbols and patterns
+- **Find/Replace**: Custom search bar (Ctrl+F) with next/previous navigation
+- **Privacy Policy & Terms**: Legal pages (no AdMob, no advertising)
+- **Ad-Free**: Completely ad-free experience
 
 ## Project Structure
 
@@ -29,36 +36,23 @@ This is a fully-featured code editor designed for mobile and desktop use. It wor
 ├── package.json         # Node.js dependencies and scripts
 ├── vite.config.ts       # Vite build configuration with PWA plugin
 ├── tsconfig.json        # TypeScript configuration
-├── PLAY_STORE_COMPLIANCE.md  # Play Store compliance checklist
 ├── src/
 │   ├── main.ts          # Application entry point
 │   ├── app.ts           # Main App class with editor logic
 │   ├── storage.ts       # LocalStorage handling for code persistence
-│   ├── settings.ts      # Settings management and UI
-│   ├── styles.css       # Complete styling with dark/light themes
+│   ├── settings.ts      # Settings management (dark mode, font size, word wrap)
+│   ├── styles.css       # Complete styling with responsive breakpoints
 │   └── vite-env.d.ts    # TypeScript declarations for Vite
 ├── public/
-│   └── icons/           # PWA icons (SVG format)
-├── android/
-│   ├── build.gradle     # Root Gradle configuration
-│   ├── settings.gradle  # Gradle settings
-│   ├── gradle.properties # SDK 35 compatible properties
-│   └── app/
-│       ├── build.gradle       # App-level build config (SDK 35)
-│       ├── proguard-rules.pro # R8 ProGuard mapping rules
-│       └── src/main/
-│           ├── AndroidManifest.xml  # SDK 35 manifest
-│           └── res/
-│               ├── xml/       # Network security, backup rules
-│               └── values/    # Strings resources
-└── .gitignore           # Git ignore rules
+│   └── icons/           # PWA icons
+└── android/             # Android WebView wrapper (optional)
 ```
 
 ## Technologies
 
 - **Vite**: Fast build tool and dev server
 - **TypeScript**: Type-safe JavaScript
-- **CodeMirror 6**: Code editor with syntax highlighting
+- **CodeMirror 6**: Code editor with syntax highlighting and autocomplete
 - **vite-plugin-pwa**: PWA support with service worker
 - **LocalStorage**: For offline data persistence
 
@@ -70,140 +64,44 @@ npm run build   # Build for production
 npm run preview # Preview production build
 ```
 
-## Android Build
-
-```bash
-cd android
-./gradlew assembleDebug    # Debug build
-./gradlew bundleRelease    # Release AAB for Play Store
-```
-
 ## Keyboard Shortcuts
 
-- **Ctrl/Cmd + S**: Save code (also auto-saves after 1 second)
-- **Ctrl/Cmd + Enter**: Run live preview
+- **Ctrl/Cmd + S**: Save code
+- **Ctrl/Cmd + Enter**: Open full preview
+- **Ctrl/Cmd + F**: Find in editor
+- **Ctrl/Cmd + =**: Increase font size
+- **Ctrl/Cmd + -**: Decrease font size
+- **Ctrl/Cmd + Z**: Undo
+- **Ctrl/Cmd + /**: Toggle comment
+- **Tab**: Indent
 
-## Play Store Compliance
+## Responsive Breakpoints
 
-- **SDK Target**: 35 (Android 15)
-- **Minimum SDK**: 24 (Android 7.0)
-- **Privacy Policy**: December 4, 2024
-- **Terms of Service**: December 4, 2024
-- **ProGuard Mapping**: Configured in proguard-rules.pro
-- **AdMob**: Compliant integration with proper disclosure
+- **Mobile** (default): Quick actions toolbar, no sidebar, tab navigation
+- **Tablet (768px+)**: Sidebar + live preview panel side by side, quick actions hidden
+- **Laptop (1024px+)**: Wider sidebar, larger header, wider preview panel
+- **Desktop (1280px+)**: Max-width content areas, 3-column shortcuts grid
+- **Large/TV (1800px+)**: Larger fonts, bigger header/tabs, extra spacing
 
-## User Preferences
+## Settings Stored
 
-- Dark mode is enabled by default
-- All code and settings are stored locally
+- Dark mode (default: on)
+- Editor font size (default: 14px, range 10–28px)
+- Word wrap (default: on)
+- Project code (per project)
+- Active project ID
 
 ## Recent Changes
 
-- December 5, 2024: **Play Store Security Hardening** - Disabled allowUniversalAccessFromFileURLs and allowFileAccessFromFileURLs, set mixedContentMode to NEVER_ALLOW
-- December 5, 2024: **Android 11+ Scoped Storage** - Migrated downloads to MediaStore API with RELATIVE_PATH and streaming for memory efficiency
-- December 5, 2024: **AdMob SDK Initialization** - Added MobileAds.initialize() for proper ad integration
-- December 5, 2024: **In-App Updates** - Added Google Play Core for automatic flexible update flow
-- December 5, 2024: **Removed deprecated storage permissions** - WRITE/READ_EXTERNAL_STORAGE no longer needed with MediaStore
-- December 5, 2024: **Version updated to 1.1.0** (versionCode 2)
-- December 5, 2024: **Custom compact inline search bar** - Replaced CodeMirror's full-screen search panel with a compact top search bar
-- December 5, 2024: **Styled modal dialogs** - Replaced browser prompt() with custom styled modals for project create/rename
-- December 5, 2024: **High-precedence keymap** - Ctrl/Cmd+F now properly opens custom search bar using Prec.highest()
-- December 5, 2024: **App renamed to "Html Live Editer"**
-- December 5, 2024: Fixed search bar visibility - now positioned above keyboard on mobile
-- December 5, 2024: Search bar hidden when Live Preview is open
-- December 5, 2024: Added project selection list in Delete section - can choose which project to delete
-- December 5, 2024: Fixed PWA update mechanism - updates now apply properly with skipWaiting and clientsClaim
-- December 5, 2024: Added update banner UI for better user experience when new version available
-- December 5, 2024: Added file upload support (onShowFileChooser) for Android WebView
-- December 5, 2024: Added file download support (DownloadListener) for Android WebView
-- December 5, 2024: Fixed window insets - content no longer hidden behind status/nav bars
-- December 5, 2024: Fixed asset paths to use relative URLs for Android WebView
-- December 5, 2024: Fixed Android app crash - MainActivity package reference in AndroidManifest.xml
-- December 5, 2024: Removed missing google_play_services_version integer reference
-- December 4, 2024: Added Delete Project feature in Settings (replaced Clear Code)
-- December 4, 2024: Project names can now include file extensions (.html, .css, .js, .ts, etc.)
-- December 4, 2024: Preview button moved to top right corner next to Settings
-- December 4, 2024: Privacy Policy and Terms updated with latest date
-- December 4, 2024: Android SDK 35 configuration added
-- December 4, 2024: ProGuard/R8 mapping rules added
-- December 4, 2024: Play Store compliance documentation created
-
-## Building APK/AAB for Android
-
-### Prerequisites
-
-To build the Android app, you need:
-1. **Android Studio** (recommended) or command-line SDK tools
-2. **JDK 17** (required for SDK 35)
-3. **Android SDK 35** installed
-4. **Gradle 8.2+** (included in the project)
-
-### Step-by-Step Build Process
-
-#### Step 1: Build the Web App First
-```bash
-npm run build
-```
-This creates the production build in the `dist/` folder.
-
-#### Step 2: Copy Web Assets to Android
-Copy the built files from `dist/` to `android/app/src/main/assets/www/`:
-```bash
-mkdir -p android/app/src/main/assets/www
-cp -r dist/* android/app/src/main/assets/www/
-```
-
-#### Step 3: Build Debug APK (for testing)
-```bash
-cd android
-./gradlew assembleDebug
-```
-The APK will be at: `android/app/build/outputs/apk/debug/app-debug.apk`
-
-#### Step 4: Build Release AAB (for Play Store)
-First, create a keystore for signing:
-```bash
-keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias html-editor
-```
-
-Add signing config to `android/gradle.properties`:
-```properties
-RELEASE_STORE_FILE=../release-key.jks
-RELEASE_STORE_PASSWORD=your_password
-RELEASE_KEY_ALIAS=html-editor
-RELEASE_KEY_PASSWORD=your_password
-```
-
-Build the release AAB:
-```bash
-cd android
-./gradlew bundleRelease
-```
-The AAB will be at: `android/app/build/outputs/bundle/release/app-release.aab`
-
-### AdMob Test IDs (Currently Configured)
-
-The project currently uses official Google AdMob test IDs for development:
-
-| Type | Test ID |
-|------|---------|
-| **App ID (Android)** | `ca-app-pub-3940256099942544~3347511713` |
-| **Banner Ad Unit** | `ca-app-pub-3940256099942544/6300978111` |
-| **Interstitial Ad Unit** | `ca-app-pub-3940256099942544/1033173712` |
-
-### AdMob Setup (Required before publishing)
-1. Create an AdMob account at https://admob.google.com
-2. Create a new app and get your **real** App ID
-3. Update `android/app/src/main/AndroidManifest.xml`:
-   - Replace the test App ID with your real App ID
-4. Create ad units and update the app code with your real ad unit IDs
-5. **Important:** Never publish with test IDs - Google will reject your app
-
-### Play Store Submission
-1. Sign in to [Google Play Console](https://play.google.com/console)
-2. Create a new app
-3. Upload the AAB file
-4. Fill in store listing (screenshots, description, etc.)
-5. Add Privacy Policy URL
-6. Complete the content rating questionnaire
-7. Submit for review
+- April 2026: **AdMob completely removed** - app is now 100% ad-free (no interstitial, no banner, no ad intervals)
+- April 2026: **Multi-device responsive layout** - improved breakpoints for tablet (768px), laptop (1024px), desktop (1280px), large/TV (1800px+)
+- April 2026: **Status bar** - real-time cursor position, line count, language, and font size display at bottom of editor
+- April 2026: **Font size control** - adjustable editor font size (10–28px) via sidebar, quick actions bar, or keyboard shortcuts; persisted in settings
+- April 2026: **Word wrap toggle** - toggle in Settings page; recreates editor with/without line wrapping
+- April 2026: **Device preview buttons** - Desktop/Tablet/Mobile preview size simulation in both side panel and full-screen preview
+- April 2026: **Keyboard shortcuts panel** - displayed in Settings page for easy reference
+- April 2026: **More code snippets** - added [], =>, // to quick actions bar
+- April 2026: **Privacy Policy & Terms updated** - removed all AdMob/advertising references
+- April 2026: **Version bumped to 1.2.0**
+- December 5, 2024: Custom compact inline search bar, styled modal dialogs, multiple project management
+- December 4, 2024: Initial feature set, dark/light mode, PWA, Android WebView wrapper

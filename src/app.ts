@@ -9,9 +9,6 @@ import { keymap } from '@codemirror/view';
 import { Storage } from './storage';
 import { Settings } from './settings';
 
-const AD_INTERVAL_MS = 2 * 60 * 60 * 1000;
-const VIEW_AD_INTERVAL_MS = 3 * 60 * 60 * 1000;
-
 export class App {
   private storage: Storage;
   private settings: Settings;
@@ -19,7 +16,6 @@ export class App {
   private activeTab: string = 'html';
   private autoSaveTimeout: number | null = null;
   private isOnline: boolean = navigator.onLine;
-  private showingInterstitial: boolean = false;
   private modalMode: 'create' | 'rename' = 'create';
   private renameProjectId: string | null = null;
   private currentSearchQuery: string = '';
@@ -35,8 +31,7 @@ export class App {
     this.bindEvents();
     this.updateOnlineStatus();
     this.applyTheme();
-    this.checkAndShowAds();
-    this.setupAdIntervals();
+    this.applyEditorFontSize();
   }
 
   private renderProjectsList(): string {
@@ -173,6 +168,26 @@ export class App {
               </button>
             </div>
           </div>
+          <div class="sidebar-section">
+            <div class="sidebar-title">Font Size</div>
+            <div class="sidebar-font-controls">
+              <button class="sidebar-btn" id="sidebarFontDecrease" title="Decrease font size">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                <span>Smaller</span>
+              </button>
+              <button class="sidebar-btn" id="sidebarFontIncrease" title="Increase font size">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                <span>Larger</span>
+              </button>
+            </div>
+          </div>
         </aside>
 
         <main class="main-content">
@@ -225,13 +240,24 @@ export class App {
                 </svg>
               </button>
             </div>
+            <div class="action-group">
+              <button class="action-btn font-size-btn" id="fontDecreaseBtn" title="Decrease Font Size (A-)">
+                <span style="font-size:11px;font-weight:700;">A-</span>
+              </button>
+              <button class="action-btn font-size-btn" id="fontIncreaseBtn" title="Increase Font Size (A+)">
+                <span style="font-size:14px;font-weight:700;">A+</span>
+              </button>
+            </div>
             <div class="action-group code-snippets">
               <button class="snippet-btn" data-snippet="<>" title="Insert Tags">&lt;&gt;</button>
               <button class="snippet-btn" data-snippet="{}" title="Insert Braces">{}</button>
               <button class="snippet-btn" data-snippet="()" title="Insert Parentheses">()</button>
               <button class="snippet-btn" data-snippet='""' title="Insert Quotes">""</button>
+              <button class="snippet-btn" data-snippet="[]" title="Insert Brackets">[]</button>
               <button class="snippet-btn" data-snippet=";" title="Insert Semicolon">;</button>
               <button class="snippet-btn" data-snippet="=" title="Insert Equals">=</button>
+              <button class="snippet-btn" data-snippet="=>" title="Arrow Function">=&gt;</button>
+              <button class="snippet-btn" data-snippet="//" title="Comment">//</button>
             </div>
           </div>
 
@@ -240,57 +266,92 @@ export class App {
             <div class="editor-panel" id="cssEditor" data-lang="css"></div>
             <div class="editor-panel" id="jsEditor" data-lang="js"></div>
           </div>
+
+          <div class="status-bar" id="statusBar">
+            <span id="statusCursor">Ln 1, Col 1</span>
+            <span class="status-divider">|</span>
+            <span id="statusLines">1 line</span>
+            <span class="status-divider">|</span>
+            <span id="statusLang">HTML</span>
+            <span class="status-right">
+              <span id="statusFontSize">Font: ${this.settings.getEditorFontSize()}px</span>
+            </span>
+          </div>
         </main>
 
         <aside class="preview-panel" id="livePreviewPanel">
           <div class="preview-panel-header">
             <span>Live Preview</span>
-            <button class="icon-btn" id="refreshPreview" title="Refresh Preview">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-              </svg>
-            </button>
+            <div class="preview-panel-controls">
+              <button class="preview-device-btn active" id="previewDesktop" title="Desktop view" data-width="100%">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </button>
+              <button class="preview-device-btn" id="previewTablet" title="Tablet view" data-width="768px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              </button>
+              <button class="preview-device-btn" id="previewMobile" title="Mobile view" data-width="375px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              </button>
+              <button class="icon-btn" id="refreshPreview" title="Refresh Preview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
+            </div>
           </div>
-          <iframe class="preview-panel-iframe" id="livePreviewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+          <div class="preview-panel-body">
+            <iframe class="preview-panel-iframe" id="livePreviewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
         </aside>
       </div>
 
       <input type="file" id="fileInput" accept=".html,.css,.js,.txt" style="display: none;">
 
-      <div class="interstitial-ad" id="interstitialAd">
-        <div class="interstitial-content">
-          <div class="interstitial-header">
-            <span>Advertisement</span>
-            <button class="close-ad-btn" id="closeAdBtn">
+      <div class="preview-container" id="previewContainer">
+        <div class="preview-header">
+          <h2>Live Preview</h2>
+          <div class="preview-header-controls">
+            <button class="preview-device-btn active" id="fullPreviewDesktop" title="Desktop" data-width="100%">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </button>
+            <button class="preview-device-btn" id="fullPreviewTablet" title="Tablet" data-width="768px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+            <button class="preview-device-btn" id="fullPreviewMobile" title="Mobile" data-width="375px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+            <button class="icon-btn" id="closePreview" aria-label="Close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
           </div>
-          <div class="interstitial-body">
-            <p>AdMob Interstitial Test</p>
-            <p class="ad-timer" id="adTimer">Close in 5s</p>
-          </div>
         </div>
-      </div>
-
-      <div class="admob-banner" id="admobBanner">
-        AdMob Test Banner
-      </div>
-
-      <div class="preview-container" id="previewContainer">
-        <div class="preview-header">
-          <h2>Live Preview</h2>
-          <button class="icon-btn" id="closePreview" aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+        <div class="preview-iframe-wrapper" id="previewIframeWrapper">
+          <iframe class="preview-iframe" id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
-        <iframe class="preview-iframe" id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
       </div>
 
       ${this.settings.renderSettingsPage()}
@@ -366,11 +427,10 @@ export class App {
           <p><strong>Last Updated:</strong> December 4, 2024</p>
           
           <h3>1. Information We Collect</h3>
-          <p>HTML Live Editor is designed with your privacy in mind. We collect minimal information necessary to provide our services:</p>
+          <p>HTML Live Editor is designed with your privacy in mind. We collect minimal information:</p>
           <ul>
             <li><strong>Local Storage Data:</strong> Your code (HTML, CSS, JavaScript) is stored locally on your device using browser localStorage. This data never leaves your device.</li>
-            <li><strong>App Settings:</strong> Your preferences like dark mode settings are stored locally on your device.</li>
-            <li><strong>Advertising Data:</strong> We use Google AdMob for displaying advertisements. AdMob may collect device identifiers and usage data according to Google's privacy policy.</li>
+            <li><strong>App Settings:</strong> Your preferences like dark mode and font size are stored locally on your device.</li>
           </ul>
 
           <h3>2. How We Use Information</h3>
@@ -378,15 +438,14 @@ export class App {
           <ul>
             <li>Provide and maintain the HTML Live Editor functionality</li>
             <li>Save your code and settings locally for your convenience</li>
-            <li>Display relevant advertisements through AdMob</li>
             <li>Improve app performance and user experience</li>
           </ul>
 
           <h3>3. Data Storage and Security</h3>
           <p>All your code and settings are stored locally on your device. We do not have access to your code or personal data. We implement appropriate security measures to protect your local data.</p>
 
-          <h3>4. Third-Party Services</h3>
-          <p>Our app uses Google AdMob for advertising. Please review Google's Privacy Policy to understand how they collect and use data.</p>
+          <h3>4. No Third-Party Advertising</h3>
+          <p>HTML Live Editor does not use any advertising services. Your experience is completely ad-free.</p>
 
           <h3>5. Children's Privacy</h3>
           <p>Our app is suitable for all ages. We do not knowingly collect personal information from children under 13. The app functions fully offline without requiring any personal data.</p>
@@ -395,7 +454,6 @@ export class App {
           <p>You have the right to:</p>
           <ul>
             <li>Clear your local data at any time through your browser settings</li>
-            <li>Opt out of personalized advertising through your device settings</li>
             <li>Use the app without providing any personal information</li>
           </ul>
 
@@ -429,13 +487,15 @@ export class App {
           <p>By downloading, installing, or using HTML Live Editor, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.</p>
 
           <h3>2. Description of Service</h3>
-          <p>HTML Live Editor is a mobile code editor that allows you to write and preview HTML, CSS, and JavaScript code. The app provides:</p>
+          <p>HTML Live Editor is a code editor that allows you to write and preview HTML, CSS, and JavaScript code across any device. The app provides:</p>
           <ul>
-            <li>Code editing with syntax highlighting</li>
-            <li>Live preview functionality</li>
-            <li>Offline capability</li>
+            <li>Code editing with syntax highlighting and autocomplete</li>
+            <li>Live preview functionality with device-size simulation</li>
+            <li>Offline capability via PWA</li>
             <li>Auto-save feature</li>
             <li>Dark and light theme options</li>
+            <li>Multiple project management</li>
+            <li>File upload and download</li>
           </ul>
 
           <h3>3. User Responsibilities</h3>
@@ -456,19 +516,16 @@ export class App {
           <h3>6. Limitation of Liability</h3>
           <p>We shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the app, including but not limited to loss of data or code.</p>
 
-          <h3>7. Advertisements</h3>
-          <p>The app displays advertisements through Google AdMob. By using the app, you agree to view advertisements as part of the service.</p>
-
-          <h3>8. Updates and Changes</h3>
+          <h3>7. Updates and Changes</h3>
           <p>We may update the app and these terms periodically. Continued use of the app after changes constitutes acceptance of the new terms.</p>
 
-          <h3>9. Termination</h3>
+          <h3>8. Termination</h3>
           <p>We reserve the right to terminate or suspend access to the app at any time, without notice, for conduct that we believe violates these terms.</p>
 
-          <h3>10. Governing Law</h3>
+          <h3>9. Governing Law</h3>
           <p>These terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles.</p>
 
-          <h3>11. Contact</h3>
+          <h3>10. Contact</h3>
           <p>For any questions regarding these Terms of Service, please contact us at:</p>
           <p><strong>Email:</strong> <a href="mailto:iftechstudio@gmail.com">iftechstudio@gmail.com</a></p>
         </div>
@@ -498,6 +555,8 @@ export class App {
       const jsEditor = this.createEditor(savedCode.js, 'js', isDark, jsPanel);
       this.editors.set('js', jsEditor);
     }
+
+    this.updateStatusBar();
   }
 
   private createEditor(content: string, lang: string, isDark: boolean, parent: HTMLElement): EditorView {
@@ -519,18 +578,25 @@ export class App {
       }
     ]));
 
-    const extensions = [
+    const extensions: any[] = [
       customSearchKeymap,
       basicSetup,
-      EditorView.lineWrapping,
       highlightSelectionMatches(),
       search({ top: true }),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           this.scheduleAutoSave();
+          this.updateStatusBar();
+        }
+        if (update.selectionSet) {
+          this.updateStatusBar();
         }
       })
     ];
+
+    if (this.settings.isWordWrap()) {
+      extensions.push(EditorView.lineWrapping);
+    }
 
     if (lang === 'html') {
       extensions.push(html());
@@ -616,6 +682,10 @@ export class App {
       this.toggleDarkMode();
     });
 
+    document.getElementById('wordWrapToggle')?.addEventListener('click', () => {
+      this.toggleWordWrap();
+    });
+
     document.getElementById('privacyLink')?.addEventListener('click', () => {
       this.showPrivacy();
     });
@@ -659,6 +729,14 @@ export class App {
         e.preventDefault();
         this.openSearch();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === '=') {
+        e.preventDefault();
+        this.changeFontSize(1);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        this.changeFontSize(-1);
+      }
     });
 
     document.getElementById('uploadBtn')?.addEventListener('click', () => {
@@ -697,16 +775,36 @@ export class App {
       this.selectAllCode();
     });
 
+    document.getElementById('fontIncreaseBtn')?.addEventListener('click', () => {
+      this.changeFontSize(1);
+    });
+
+    document.getElementById('fontDecreaseBtn')?.addEventListener('click', () => {
+      this.changeFontSize(-1);
+    });
+
+    document.getElementById('sidebarFontIncrease')?.addEventListener('click', () => {
+      this.changeFontSize(1);
+    });
+
+    document.getElementById('sidebarFontDecrease')?.addEventListener('click', () => {
+      this.changeFontSize(-1);
+    });
+
+    document.getElementById('settingsFontIncrease')?.addEventListener('click', () => {
+      this.changeFontSize(1);
+    });
+
+    document.getElementById('settingsFontDecrease')?.addEventListener('click', () => {
+      this.changeFontSize(-1);
+    });
+
     document.querySelectorAll('.snippet-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
         const snippet = target.dataset.snippet;
         if (snippet) this.insertSnippet(snippet);
       });
-    });
-
-    document.getElementById('closeAdBtn')?.addEventListener('click', () => {
-      this.hideInterstitialAd();
     });
 
     document.getElementById('searchInput')?.addEventListener('input', (e) => {
@@ -759,7 +857,35 @@ export class App {
       }
     });
 
+    this.bindPreviewDeviceButtons('previewDesktop', 'previewTablet', 'previewMobile', 'livePreviewFrame');
+    this.bindPreviewDeviceButtons('fullPreviewDesktop', 'fullPreviewTablet', 'fullPreviewMobile', 'previewFrame', 'previewIframeWrapper');
+
     this.updateLivePreview();
+  }
+
+  private bindPreviewDeviceButtons(desktopId: string, tabletId: string, mobileId: string, frameId: string, wrapperId?: string): void {
+    const btns = [desktopId, tabletId, mobileId];
+    btns.forEach(btnId => {
+      document.getElementById(btnId)?.addEventListener('click', (e) => {
+        btns.forEach(id => document.getElementById(id)?.classList.remove('active'));
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('active');
+        const width = target.dataset.width || '100%';
+        const frame = document.getElementById(frameId) as HTMLIFrameElement;
+        const wrapper = wrapperId ? document.getElementById(wrapperId) : null;
+        if (frame) {
+          if (width === '100%') {
+            frame.style.width = '100%';
+            frame.style.maxWidth = '';
+            if (wrapper) { wrapper.classList.remove('device-constrained'); }
+          } else {
+            frame.style.width = width;
+            frame.style.maxWidth = width;
+            if (wrapper) { wrapper.classList.add('device-constrained'); }
+          }
+        }
+      });
+    });
   }
 
   private bindProjectListEvents(): void {
@@ -988,6 +1114,7 @@ export class App {
     }
 
     this.updateLivePreview();
+    this.updateStatusBar();
   }
 
   private updateLivePreview(): void {
@@ -1031,6 +1158,8 @@ export class App {
     if (editor) {
       editor.focus();
     }
+
+    this.updateStatusBar();
   }
 
   private scheduleAutoSave(): void {
@@ -1136,6 +1265,14 @@ export class App {
     this.recreateEditors();
   }
 
+  private toggleWordWrap(): void {
+    const enabled = this.settings.toggleWordWrap();
+    this.recreateEditors();
+    this.showToast(enabled ? 'Word wrap on' : 'Word wrap off');
+    const toggle = document.getElementById('wordWrapToggle');
+    if (toggle) toggle.classList.toggle('active', enabled);
+  }
+
   private applyTheme(): void {
     const isDark = this.settings.isDarkMode();
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -1144,6 +1281,21 @@ export class App {
     if (toggle) {
       toggle.classList.toggle('active', isDark);
     }
+  }
+
+  private applyEditorFontSize(): void {
+    const size = this.settings.getEditorFontSize();
+    document.documentElement.style.setProperty('--editor-font-size', `${size}px`);
+  }
+
+  private changeFontSize(delta: number): void {
+    const newSize = this.settings.changeEditorFontSize(delta);
+    document.documentElement.style.setProperty('--editor-font-size', `${newSize}px`);
+    const statusFontSize = document.getElementById('statusFontSize');
+    if (statusFontSize) statusFontSize.textContent = `Font: ${newSize}px`;
+    const settingsFontValue = document.getElementById('settingsFontValue');
+    if (settingsFontValue) settingsFontValue.textContent = `${newSize}px`;
+    this.showToast(`Font size: ${newSize}px`);
   }
 
   private recreateEditors(): void {
@@ -1166,6 +1318,29 @@ export class App {
         this.editors.set(lang, editor);
       }
     });
+
+    this.updateStatusBar();
+  }
+
+  private updateStatusBar(): void {
+    const editor = this.editors.get(this.activeTab);
+    if (!editor) return;
+
+    const state = editor.state;
+    const pos = state.selection.main.head;
+    const line = state.doc.lineAt(pos);
+    const col = pos - line.from + 1;
+    const lineCount = state.doc.lines;
+
+    const langLabels: Record<string, string> = { html: 'HTML', css: 'CSS', js: 'JavaScript' };
+
+    const cursorEl = document.getElementById('statusCursor');
+    const linesEl = document.getElementById('statusLines');
+    const langEl = document.getElementById('statusLang');
+
+    if (cursorEl) cursorEl.textContent = `Ln ${line.number}, Col ${col}`;
+    if (linesEl) linesEl.textContent = `${lineCount} ${lineCount === 1 ? 'line' : 'lines'}`;
+    if (langEl) langEl.textContent = langLabels[this.activeTab] || this.activeTab.toUpperCase();
   }
 
   private updateOnlineStatus(): void {
@@ -1447,14 +1622,23 @@ export class App {
       insertText = '<></>';
       cursorOffset = 1;
     } else if (snippet === '{}') {
-      insertText = '{}';
-      cursorOffset = 1;
+      insertText = '{\n  \n}';
+      cursorOffset = 4;
     } else if (snippet === '()') {
       insertText = '()';
       cursorOffset = 1;
     } else if (snippet === '""') {
       insertText = '""';
       cursorOffset = 1;
+    } else if (snippet === '[]') {
+      insertText = '[]';
+      cursorOffset = 1;
+    } else if (snippet === '=>') {
+      insertText = '=> ';
+      cursorOffset = 3;
+    } else if (snippet === '//') {
+      insertText = '// ';
+      cursorOffset = 3;
     }
 
     editor.dispatch({
@@ -1481,67 +1665,5 @@ export class App {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
     }, 2000);
-  }
-
-  private checkAndShowAds(): void {
-    const lastAdTime = localStorage.getItem('lastInterstitialAd');
-    const lastViewTime = localStorage.getItem('lastViewAd');
-    const now = Date.now();
-
-    if (!lastAdTime || (now - parseInt(lastAdTime)) >= AD_INTERVAL_MS) {
-      this.showInterstitialAd();
-      localStorage.setItem('lastInterstitialAd', now.toString());
-    }
-
-    if (!lastViewTime || (now - parseInt(lastViewTime)) >= VIEW_AD_INTERVAL_MS) {
-      localStorage.setItem('lastViewAd', now.toString());
-    }
-  }
-
-  private setupAdIntervals(): void {
-    setInterval(() => {
-      this.showInterstitialAd();
-      localStorage.setItem('lastInterstitialAd', Date.now().toString());
-    }, AD_INTERVAL_MS);
-
-    setInterval(() => {
-      localStorage.setItem('lastViewAd', Date.now().toString());
-    }, VIEW_AD_INTERVAL_MS);
-  }
-
-  private showInterstitialAd(): void {
-    if (this.showingInterstitial) return;
-    this.showingInterstitial = true;
-
-    const ad = document.getElementById('interstitialAd');
-    const closeBtn = document.getElementById('closeAdBtn') as HTMLButtonElement;
-    const timer = document.getElementById('adTimer');
-
-    if (!ad || !closeBtn || !timer) return;
-
-    ad.classList.add('active');
-    closeBtn.disabled = true;
-
-    let countdown = 5;
-    timer.textContent = `Close in ${countdown}s`;
-
-    const interval = setInterval(() => {
-      countdown--;
-      if (countdown > 0) {
-        timer.textContent = `Close in ${countdown}s`;
-      } else {
-        clearInterval(interval);
-        timer.textContent = 'You can close now';
-        closeBtn.disabled = false;
-      }
-    }, 1000);
-  }
-
-  private hideInterstitialAd(): void {
-    const ad = document.getElementById('interstitialAd');
-    if (ad) {
-      ad.classList.remove('active');
-      this.showingInterstitial = false;
-    }
   }
 }

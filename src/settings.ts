@@ -2,6 +2,8 @@ const SETTINGS_KEY = 'html_editor_settings';
 
 interface SettingsData {
   darkMode: boolean;
+  editorFontSize: number;
+  wordWrap: boolean;
 }
 
 export class Settings {
@@ -15,14 +17,21 @@ export class Settings {
     try {
       const saved = localStorage.getItem(SETTINGS_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          darkMode: parsed.darkMode ?? true,
+          editorFontSize: parsed.editorFontSize ?? 14,
+          wordWrap: parsed.wordWrap ?? true
+        };
       }
     } catch (e) {
       console.error('Error loading settings:', e);
     }
 
     return {
-      darkMode: true
+      darkMode: true,
+      editorFontSize: 14,
+      wordWrap: true
     };
   }
 
@@ -42,6 +51,28 @@ export class Settings {
     this.settings.darkMode = !this.settings.darkMode;
     this.saveSettings();
     return this.settings.darkMode;
+  }
+
+  getEditorFontSize(): number {
+    return this.settings.editorFontSize;
+  }
+
+  changeEditorFontSize(delta: number): number {
+    const min = 10;
+    const max = 28;
+    this.settings.editorFontSize = Math.min(max, Math.max(min, this.settings.editorFontSize + delta));
+    this.saveSettings();
+    return this.settings.editorFontSize;
+  }
+
+  isWordWrap(): boolean {
+    return this.settings.wordWrap;
+  }
+
+  toggleWordWrap(): boolean {
+    this.settings.wordWrap = !this.settings.wordWrap;
+    this.saveSettings();
+    return this.settings.wordWrap;
   }
 
   renderSettingsPage(): string {
@@ -64,6 +95,42 @@ export class Settings {
                 <div class="settings-item-desc">Use dark theme for the editor</div>
               </div>
               <div class="toggle ${this.settings.darkMode ? 'active' : ''}" id="darkModeToggle"></div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Word Wrap</div>
+                <div class="settings-item-desc">Wrap long lines in the editor</div>
+              </div>
+              <div class="toggle ${this.settings.wordWrap ? 'active' : ''}" id="wordWrapToggle"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">Editor</div>
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">Font Size</div>
+                <div class="settings-item-desc">Current: ${this.settings.editorFontSize}px (range 10–28px)</div>
+              </div>
+              <div class="font-size-controls">
+                <button class="font-ctrl-btn" id="settingsFontDecrease" title="Decrease">A-</button>
+                <span class="font-size-value" id="settingsFontValue">${this.settings.editorFontSize}px</span>
+                <button class="font-ctrl-btn" id="settingsFontIncrease" title="Increase">A+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">Keyboard Shortcuts</div>
+            <div class="shortcuts-grid">
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd> <span>Save</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> <span>Preview</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>F</kbd> <span>Find</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>=</kbd> <span>Font +</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>-</kbd> <span>Font -</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd> <span>Undo</span></div>
+              <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>/</kbd> <span>Comment</span></div>
+              <div class="shortcut-item"><kbd>Tab</kbd> <span>Indent</span></div>
             </div>
           </div>
 
@@ -109,7 +176,7 @@ export class Settings {
             <div class="settings-item">
               <div class="settings-item-info">
                 <div class="settings-item-title">Html Live Editer</div>
-                <div class="settings-item-desc">Version 1.1.0</div>
+                <div class="settings-item-desc">Version 1.2.0 — Ad-free</div>
               </div>
             </div>
           </div>
