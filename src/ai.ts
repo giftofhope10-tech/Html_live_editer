@@ -10,7 +10,12 @@ export class AIService {
 
   private loadKey(): string {
     try {
-      return localStorage.getItem(AI_KEY_STORAGE) || '';
+      const saved = localStorage.getItem(AI_KEY_STORAGE) || '';
+      if (saved && !/^[\x20-\x7E]+$/.test(saved)) {
+        localStorage.removeItem(AI_KEY_STORAGE);
+        return '';
+      }
+      return saved;
     } catch {
       return '';
     }

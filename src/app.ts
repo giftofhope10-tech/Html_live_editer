@@ -1822,9 +1822,14 @@ export class App {
   private updateAiKeyStatus(): void {
     const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
     const status = document.getElementById('aiKeyStatus');
-    if (input && this.ai.hasKey()) {
-      const key = this.ai.getKey();
-      input.value = key.substring(0, 8) + '••••••••••••••••••••••••••••';
+    if (input) {
+      input.value = '';
+      if (this.ai.hasKey()) {
+        const key = this.ai.getKey();
+        input.placeholder = key.substring(0, 8) + '••••••••••••••••';
+      } else {
+        input.placeholder = 'sk-...';
+      }
     }
     if (status) {
       if (this.ai.hasKey()) {
@@ -1841,7 +1846,11 @@ export class App {
     const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
     const key = input?.value?.trim();
     if (!key) {
-      this.showToast('Please enter an API key');
+      this.showToast('Please enter your new API key');
+      return;
+    }
+    if (!/^[\x20-\x7E]+$/.test(key)) {
+      this.showToast('Invalid key — contains invalid characters');
       return;
     }
     if (!key.startsWith('sk-')) {
