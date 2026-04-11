@@ -152,6 +152,33 @@ export class Settings {
           </div>
 
           <div class="settings-section">
+            <div class="settings-section-title">AI Assistant</div>
+            <div class="settings-item ai-key-item">
+              <div class="settings-item-info">
+                <div class="settings-item-title">OpenAI API Key</div>
+                <div class="settings-item-desc">Your key is stored only on this device. Never shared.</div>
+              </div>
+            </div>
+            <div class="ai-key-input-row">
+              <div class="ai-key-field-wrap">
+                <input type="password" id="aiApiKeyInput" class="ai-key-input" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+                <button class="ai-key-toggle" id="aiKeyToggle" title="Show/hide key">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <button class="ai-key-save-btn" id="aiKeySaveBtn">Save</button>
+              <button class="ai-key-clear-btn" id="aiKeyClearBtn">Clear</button>
+            </div>
+            <div class="ai-key-status" id="aiKeyStatus"></div>
+            <a class="ai-key-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
+              Get your free API key at platform.openai.com →
+            </a>
+          </div>
+
+          <div class="settings-section">
             <div class="settings-section-title">Legal</div>
             <a class="settings-link" id="privacyLink">
               <div class="settings-item-info">

@@ -8,10 +8,12 @@ import { highlightSelectionMatches, SearchQuery, findNext, findPrevious, setSear
 import { keymap } from '@codemirror/view';
 import { Storage } from './storage';
 import { Settings } from './settings';
+import { AIService } from './ai';
 
 export class App {
   private storage: Storage;
   private settings: Settings;
+  private ai: AIService;
   private editors: Map<string, EditorView> = new Map();
   private activeTab: string = 'html';
   private autoSaveTimeout: number | null = null;
@@ -19,10 +21,12 @@ export class App {
   private modalMode: 'create' | 'rename' = 'create';
   private renameProjectId: string | null = null;
   private currentSearchQuery: string = '';
+  private aiChatHistory: Array<{role: 'user'|'ai', text: string}> = [];
 
   constructor() {
     this.storage = new Storage();
     this.settings = new Settings();
+    this.ai = new AIService();
   }
 
   init(): void {
@@ -109,6 +113,14 @@ export class App {
               <polygon points="5,3 19,12 5,21"></polygon>
             </svg>
             <span>Preview</span>
+          </button>
+          <button class="ai-header-btn" id="aiBtn" aria-label="AI Assistant" title="AI Assistant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"></path>
+              <line x1="8" y1="22" x2="16" y2="22"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+            </svg>
+            <span>AI</span>
           </button>
           <button class="icon-btn" id="settingsBtn" aria-label="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -383,6 +395,86 @@ export class App {
               </svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      <div class="ai-panel" id="aiPanel">
+        <div class="ai-panel-header">
+          <div class="ai-panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"></path>
+              <line x1="8" y1="22" x2="16" y2="22"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+            </svg>
+            <span>AI Assistant</span>
+          </div>
+          <div class="ai-panel-header-actions">
+            <button class="ai-clear-chat-btn" id="aiClearChat" title="Clear chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"></path>
+              </svg>
+            </button>
+            <button class="icon-btn ai-panel-close" id="aiPanelClose" aria-label="Close AI">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="ai-quick-actions">
+          <button class="ai-action-btn" data-action="fix" title="Fix all errors in current code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+            Fix Code
+          </button>
+          <button class="ai-action-btn" data-action="errors" title="Find bugs and issues">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Find Errors
+          </button>
+          <button class="ai-action-btn" data-action="improve" title="Suggest improvements">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
+              <polyline points="17,6 23,6 23,12"></polyline>
+            </svg>
+            Improve
+          </button>
+          <button class="ai-action-btn" data-action="explain" title="Explain what the code does">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Explain
+          </button>
+        </div>
+        <div class="ai-chat-body" id="aiChatBody">
+          <div class="ai-welcome">
+            <p>Ask me anything about your code — fix errors, improve it, or explain it.</p>
+            <p class="ai-welcome-sub">Your API key is stored only on your device.</p>
+          </div>
+        </div>
+        <div class="ai-input-row">
+          <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="Ask AI about your code..." autocomplete="off" />
+          <button class="ai-send-btn" id="aiSendBtn" title="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22,2 15,22 11,13 2,9"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="ai-no-key-notice" id="aiNoKeyNotice" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Add your OpenAI API key in <strong>Settings</strong> to use AI features.</span>
         </div>
       </div>
 
@@ -860,7 +952,54 @@ export class App {
     this.bindPreviewDeviceButtons('previewDesktop', 'previewTablet', 'previewMobile', 'livePreviewFrame');
     this.bindPreviewDeviceButtons('fullPreviewDesktop', 'fullPreviewTablet', 'fullPreviewMobile', 'previewFrame', 'previewIframeWrapper');
 
+    document.getElementById('aiBtn')?.addEventListener('click', () => {
+      this.showAiPanel();
+    });
+
+    document.getElementById('aiPanelClose')?.addEventListener('click', () => {
+      this.hideAiPanel();
+    });
+
+    document.getElementById('aiClearChat')?.addEventListener('click', () => {
+      this.clearAiChat();
+    });
+
+    document.querySelectorAll('.ai-action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = (e.currentTarget as HTMLElement).dataset.action;
+        if (action) this.handleAiAction(action);
+      });
+    });
+
+    document.getElementById('aiSendBtn')?.addEventListener('click', () => {
+      this.sendAiChat();
+    });
+
+    document.getElementById('aiChatInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.sendAiChat();
+      }
+    });
+
+    document.getElementById('aiKeySaveBtn')?.addEventListener('click', () => {
+      this.saveAiApiKey();
+    });
+
+    document.getElementById('aiKeyClearBtn')?.addEventListener('click', () => {
+      this.clearAiApiKey();
+    });
+
+    document.getElementById('aiKeyToggle')?.addEventListener('click', () => {
+      this.toggleAiKeyVisibility();
+    });
+
+    document.getElementById('aiApiKeyInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.saveAiApiKey();
+    });
+
     this.updateLivePreview();
+    this.updateAiKeyStatus();
   }
 
   private bindPreviewDeviceButtons(desktopId: string, tabletId: string, mobileId: string, frameId: string, wrapperId?: string): void {
@@ -1646,6 +1785,255 @@ export class App {
       selection: { anchor: pos + cursorOffset }
     });
     editor.focus();
+  }
+
+  private showAiPanel(): void {
+    const panel = document.getElementById('aiPanel');
+    panel?.classList.add('active');
+    this.updateAiNoKeyNotice();
+    setTimeout(() => {
+      document.getElementById('aiChatInput')?.focus();
+    }, 300);
+  }
+
+  private hideAiPanel(): void {
+    document.getElementById('aiPanel')?.classList.remove('active');
+  }
+
+  private clearAiChat(): void {
+    this.aiChatHistory = [];
+    const body = document.getElementById('aiChatBody');
+    if (body) {
+      body.innerHTML = `
+        <div class="ai-welcome">
+          <p>Ask me anything about your code — fix errors, improve it, or explain it.</p>
+          <p class="ai-welcome-sub">Your API key is stored only on your device.</p>
+        </div>`;
+    }
+  }
+
+  private updateAiNoKeyNotice(): void {
+    const notice = document.getElementById('aiNoKeyNotice');
+    if (notice) {
+      notice.style.display = this.ai.hasKey() ? 'none' : 'flex';
+    }
+  }
+
+  private updateAiKeyStatus(): void {
+    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
+    const status = document.getElementById('aiKeyStatus');
+    if (input && this.ai.hasKey()) {
+      const key = this.ai.getKey();
+      input.value = key.substring(0, 8) + '••••••••••••••••••••••••••••';
+    }
+    if (status) {
+      if (this.ai.hasKey()) {
+        status.className = 'ai-key-status set';
+        status.textContent = 'API key is saved on this device.';
+      } else {
+        status.className = 'ai-key-status';
+        status.textContent = '';
+      }
+    }
+  }
+
+  private saveAiApiKey(): void {
+    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
+    const key = input?.value?.trim();
+    if (!key) {
+      this.showToast('Please enter an API key');
+      return;
+    }
+    if (!key.startsWith('sk-')) {
+      this.showToast('Invalid key — must start with sk-');
+      return;
+    }
+    this.ai.saveKey(key);
+    this.updateAiKeyStatus();
+    this.showToast('API key saved!');
+  }
+
+  private clearAiApiKey(): void {
+    this.ai.clearKey();
+    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
+    if (input) input.value = '';
+    this.updateAiKeyStatus();
+    this.showToast('API key removed');
+  }
+
+  private toggleAiKeyVisibility(): void {
+    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
+    if (input) {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  }
+
+  private getCurrentCode(): { html: string; css: string; js: string } {
+    return {
+      html: this.editors.get('html')?.state.doc.toString() || '',
+      css: this.editors.get('css')?.state.doc.toString() || '',
+      js: this.editors.get('js')?.state.doc.toString() || ''
+    };
+  }
+
+  private addAiMessage(role: 'user' | 'ai', text: string, isLoading = false): HTMLElement {
+    const body = document.getElementById('aiChatBody');
+    if (!body) return document.createElement('div');
+
+    const welcome = body.querySelector('.ai-welcome');
+    if (welcome) welcome.remove();
+
+    const msg = document.createElement('div');
+    msg.className = `ai-message ai-message-${role}${isLoading ? ' ai-message-loading' : ''}`;
+    
+    if (isLoading) {
+      msg.innerHTML = `<div class="ai-typing"><span></span><span></span><span></span></div>`;
+    } else {
+      const formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre class="ai-code-block"><code>$1</code></pre>')
+        .replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>')
+        .replace(/\n/g, '<br>');
+      msg.innerHTML = `<div class="ai-message-text">${formatted}</div>`;
+
+      if (role === 'ai') {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'ai-copy-btn';
+        copyBtn.title = 'Copy response';
+        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(text).then(() => this.showToast('Copied!'));
+        });
+        msg.appendChild(copyBtn);
+      }
+    }
+
+    body.appendChild(msg);
+    body.scrollTop = body.scrollHeight;
+    return msg;
+  }
+
+  private setAiLoading(loading: boolean): void {
+    document.querySelectorAll('.ai-action-btn').forEach(btn => {
+      (btn as HTMLButtonElement).disabled = loading;
+    });
+    const sendBtn = document.getElementById('aiSendBtn') as HTMLButtonElement;
+    if (sendBtn) sendBtn.disabled = loading;
+    const chatInput = document.getElementById('aiChatInput') as HTMLInputElement;
+    if (chatInput) chatInput.disabled = loading;
+  }
+
+  private handleAiError(err: any): string {
+    const msg = err?.message || '';
+    if (msg === 'NO_KEY') return 'Please add your OpenAI API key in Settings first.';
+    if (msg === 'INVALID_KEY') return 'Invalid API key. Please check your key in Settings.';
+    if (msg === 'RATE_LIMIT') return 'Rate limit reached. Please wait a moment and try again.';
+    if (msg === 'QUOTA') return 'Your OpenAI quota is exhausted. Check your plan at platform.openai.com.';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) return 'Network error. Please check your internet connection.';
+    return `Error: ${msg || 'Something went wrong. Please try again.'}`;
+  }
+
+  private async handleAiAction(action: string): Promise<void> {
+    if (!this.ai.hasKey()) {
+      this.showToast('Add API key in Settings first');
+      this.showSettings();
+      return;
+    }
+
+    const code = this.getCurrentCode();
+    const labels: Record<string, string> = {
+      fix: 'Fix Code',
+      errors: 'Find Errors',
+      improve: 'Improve Code',
+      explain: 'Explain Code'
+    };
+
+    this.addAiMessage('user', labels[action] || action);
+    const loadingEl = this.addAiMessage('ai', '', true);
+    this.setAiLoading(true);
+
+    try {
+      let result = '';
+      if (action === 'fix') result = await this.ai.fixCode(code.html, code.css, code.js);
+      else if (action === 'errors') result = await this.ai.findErrors(code.html, code.css, code.js);
+      else if (action === 'improve') result = await this.ai.improveCode(code.html, code.css, code.js);
+      else if (action === 'explain') result = await this.ai.explainCode(code.html, code.css, code.js);
+
+      loadingEl.remove();
+      const aiMsgEl = this.addAiMessage('ai', result);
+
+      if (action === 'fix') {
+        const applyBtn = document.createElement('button');
+        applyBtn.className = 'ai-apply-btn';
+        applyBtn.textContent = 'Apply Fixed Code';
+        applyBtn.addEventListener('click', () => {
+          this.applyFixedCode(result);
+          applyBtn.textContent = 'Applied!';
+          applyBtn.disabled = true;
+        });
+        aiMsgEl.appendChild(applyBtn);
+      }
+    } catch (err: any) {
+      loadingEl.remove();
+      this.addAiMessage('ai', this.handleAiError(err));
+    } finally {
+      this.setAiLoading(false);
+    }
+  }
+
+  private async sendAiChat(): Promise<void> {
+    const input = document.getElementById('aiChatInput') as HTMLInputElement;
+    const message = input?.value?.trim();
+    if (!message) return;
+
+    if (!this.ai.hasKey()) {
+      this.showToast('Add API key in Settings first');
+      this.showSettings();
+      return;
+    }
+
+    input.value = '';
+    this.addAiMessage('user', message);
+    const loadingEl = this.addAiMessage('ai', '', true);
+    this.setAiLoading(true);
+
+    try {
+      const code = this.getCurrentCode();
+      const result = await this.ai.chat(message, code.html, code.css, code.js);
+      loadingEl.remove();
+      this.addAiMessage('ai', result);
+    } catch (err: any) {
+      loadingEl.remove();
+      this.addAiMessage('ai', this.handleAiError(err));
+    } finally {
+      this.setAiLoading(false);
+      input.focus();
+    }
+  }
+
+  private applyFixedCode(result: string): void {
+    const htmlMatch = result.match(/===HTML===\s*([\s\S]*?)(?:===CSS===|$)/);
+    const cssMatch = result.match(/===CSS===\s*([\s\S]*?)(?:===JS===|$)/);
+    const jsMatch = result.match(/===JS===\s*([\s\S]*?)$/);
+
+    const applyToEditor = (lang: string, content: string) => {
+      const editor = this.editors.get(lang);
+      if (editor && content.trim()) {
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: content.trim() }
+        });
+      }
+    };
+
+    if (htmlMatch?.[1]) applyToEditor('html', htmlMatch[1]);
+    if (cssMatch?.[1]) applyToEditor('css', cssMatch[1]);
+    if (jsMatch?.[1]) applyToEditor('js', jsMatch[1]);
+
+    this.saveCode();
+    this.updateLivePreview();
+    this.showToast('Fixed code applied!');
   }
 
   private showToast(message: string): void {
