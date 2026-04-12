@@ -154,31 +154,15 @@ export class Settings {
           <div class="settings-section">
             <div class="settings-section-title">AI Assistant</div>
 
-            <div class="ai-provider-label">Choose AI Provider</div>
-            <div class="ai-provider-tabs">
-              <button class="ai-provider-tab" data-provider="gemini" id="providerGemini">
-                <span class="ai-provider-tab-name">Google Gemini</span>
-                <span class="ai-provider-tab-badge free">15/min FREE</span>
-              </button>
-              <button class="ai-provider-tab" data-provider="groq" id="providerGroq">
-                <span class="ai-provider-tab-name">Groq (Llama)</span>
-                <span class="ai-provider-tab-badge fast">30/min FREE</span>
-              </button>
-              <button class="ai-provider-tab" data-provider="openai" id="providerOpenAI">
-                <span class="ai-provider-tab-name">OpenAI</span>
-                <span class="ai-provider-tab-badge">3/min free</span>
-              </button>
-            </div>
-
             <div class="settings-item ai-key-item">
               <div class="settings-item-info">
-                <div class="settings-item-title" id="aiKeyTitle">API Key</div>
-                <div class="settings-item-desc">Stored only on your device. Never shared with anyone.</div>
+                <div class="settings-item-title">Groq API Key</div>
+                <div class="settings-item-desc">Powered by Groq (Llama) — 30 requests/min free. Stored only on this device.</div>
               </div>
             </div>
             <div class="ai-key-input-row">
               <div class="ai-key-field-wrap">
-                <input type="password" id="aiApiKeyInput" class="ai-key-input" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+                <input type="password" id="aiApiKeyInput" class="ai-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
                 <button class="ai-key-toggle" id="aiKeyToggle" title="Show/hide key">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -190,8 +174,8 @@ export class Settings {
               <button class="ai-key-clear-btn" id="aiKeyClearBtn">Clear</button>
             </div>
             <div class="ai-key-status" id="aiKeyStatus"></div>
-            <a class="ai-key-link" id="aiKeyLink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
-              Get free API key → aistudio.google.com/app/apikey
+            <a class="ai-key-link" href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">
+              Get free API key → console.groq.com/keys
             </a>
           </div>
 
