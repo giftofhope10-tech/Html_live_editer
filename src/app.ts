@@ -8,7 +8,7 @@ import { highlightSelectionMatches, SearchQuery, findNext, findPrevious, setSear
 import { keymap } from '@codemirror/view';
 import { Storage } from './storage';
 import { Settings } from './settings';
-import { AIService } from './ai';
+import { AIService, PROVIDERS, type AIProvider } from './ai';
 
 export class App {
   private storage: Storage;
@@ -1004,8 +1004,16 @@ export class App {
       if (e.key === 'Enter') this.saveAiApiKey();
     });
 
+    document.querySelectorAll('.ai-provider-tab').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const provider = (e.currentTarget as HTMLElement).dataset.provider as AIProvider;
+        if (provider) this.switchAiProvider(provider);
+      });
+    });
+
     this.updateLivePreview();
     this.updateAiKeyStatus();
+    this.switchAiProvider(this.ai.getProvider());
   }
 
   private bindPreviewDeviceButtons(desktopId: string, tabletId: string, mobileId: string, frameId: string, wrapperId?: string): void {
@@ -1825,22 +1833,41 @@ export class App {
     }
   }
 
+  private switchAiProvider(provider: AIProvider): void {
+    this.ai.setProvider(provider);
+    document.querySelectorAll('.ai-provider-tab').forEach(btn => {
+      btn.classList.toggle('active', (btn as HTMLElement).dataset.provider === provider);
+    });
+    const info = PROVIDERS[provider];
+    const keyTitle = document.getElementById('aiKeyTitle');
+    if (keyTitle) keyTitle.textContent = `${info.name} API Key`;
+    const keyLink = document.getElementById('aiKeyLink') as HTMLAnchorElement;
+    if (keyLink) {
+      keyLink.href = info.keyLink;
+      keyLink.textContent = `Get free API key → ${info.keyLinkText}`;
+    }
+    this.updateAiKeyStatus();
+  }
+
   private updateAiKeyStatus(): void {
     const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
     const status = document.getElementById('aiKeyStatus');
+    const provider = this.ai.getProvider();
+    const info = PROVIDERS[provider];
+
     if (input) {
       input.value = '';
       if (this.ai.hasKey()) {
         const key = this.ai.getKey();
         input.placeholder = key.substring(0, 8) + '••••••••••••••••';
       } else {
-        input.placeholder = 'sk-...';
+        input.placeholder = info.placeholder;
       }
     }
     if (status) {
       if (this.ai.hasKey()) {
         status.className = 'ai-key-status set';
-        status.textContent = 'API key is saved on this device.';
+        status.textContent = `${info.name} key saved on this device.`;
       } else {
         status.className = 'ai-key-status';
         status.textContent = '';
@@ -1852,15 +1879,11 @@ export class App {
     const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
     const key = input?.value?.trim();
     if (!key) {
-      this.showToast('Please enter your new API key');
+      this.showToast('Please enter your API key');
       return;
     }
     if (!/^[\x20-\x7E]+$/.test(key)) {
       this.showToast('Invalid key — contains invalid characters');
-      return;
-    }
-    if (!key.startsWith('sk-')) {
-      this.showToast('Invalid key — must start with sk-');
       return;
     }
     this.ai.saveKey(key);
@@ -1944,13 +1967,15 @@ export class App {
     const msg = err?.message || '';
     if (msg === 'NO_KEY') return 'Please add your OpenAI API key in Settings first.';
     if (msg === 'INVALID_KEY') return 'Invalid API key. Please check your key in Settings and make sure it starts with sk-.';
-    if (msg === 'RATE_LIMIT') return [
-      'Rate limit reached (tried 3 times automatically).',
-      '',
-      'OpenAI free tier allows only 3 requests/minute. Please wait 60 seconds and try again.',
-      '',
-      'Tip: Upgrade to a paid OpenAI plan at platform.openai.com/settings/billing for higher limits.'
-    ].join('\n');
+    if (msg === 'RATE_LIMIT') {
+      const p = this.ai.getProvider();
+      const limits: Record<string, string> = {
+        openai: 'OpenAI free tier: 3 req/min. Wait 60s or switch to Gemini/Groq in Settings.',
+        gemini: 'Gemini free tier: 15 req/min. Please wait a moment and try again.',
+        groq: 'Groq free tier: 30 req/min limit reached. Please wait a moment and try again.'
+      };
+      return `Rate limit reached (retried automatically).\n\n${limits[p] || 'Please wait a moment and try again.'}`;
+    }
     if (msg === 'QUOTA') return 'Your OpenAI usage quota is exhausted. Add billing at platform.openai.com/settings/billing to continue.';
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) return 'Network error. Please check your internet connection and try again.';
     return `Error: ${msg || 'Something went wrong. Please try again.'}`;
