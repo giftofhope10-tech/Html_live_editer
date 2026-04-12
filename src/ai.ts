@@ -1,8 +1,11 @@
 const AI_KEY_STORAGE = 'html_editor_ai_key';
 const AI_MODEL = 'gpt-4o-mini';
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 5000;
 
 export class AIService {
   private apiKey: string = '';
+  onRetry?: (attempt: number, waitSec: number) => void;
 
   constructor() {
     this.apiKey = this.loadKey();
@@ -49,7 +52,11 @@ export class AIService {
     } catch {}
   }
 
-  async ask(systemPrompt: string, userMessage: string): Promise<string> {
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async ask(systemPrompt: string, userMessage: string, attempt = 0): Promise<string> {
     if (!this.hasKey()) {
       throw new Error('NO_KEY');
     }
@@ -66,7 +73,7 @@ export class AIService {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
         ],
-        max_tokens: 2000,
+        max_tokens: 1500,
         temperature: 0.3
       })
     });
@@ -75,7 +82,15 @@ export class AIService {
       const err = await response.json().catch(() => ({}));
       const msg = (err as any)?.error?.message || '';
       if (response.status === 401) throw new Error('INVALID_KEY');
-      if (response.status === 429) throw new Error('RATE_LIMIT');
+      if (response.status === 429) {
+        if (attempt < MAX_RETRIES) {
+          const waitSec = RETRY_DELAY_MS * (attempt + 1) / 1000;
+          this.onRetry?.(attempt + 1, waitSec);
+          await this.sleep(RETRY_DELAY_MS * (attempt + 1));
+          return this.ask(systemPrompt, userMessage, attempt + 1);
+        }
+        throw new Error('RATE_LIMIT');
+      }
       if (response.status === 402 || msg.includes('quota')) throw new Error('QUOTA');
       throw new Error(msg || 'API_ERROR');
     }
@@ -84,105 +99,44 @@ export class AIService {
     return data.choices?.[0]?.message?.content || 'No response received.';
   }
 
+  private trimCode(code: string, max = 800): string {
+    return code.length > max ? code.substring(0, max) + '\n...(truncated)' : code;
+  }
+
   async fixCode(html: string, css: string, js: string): Promise<string> {
-    const system = `You are an expert HTML/CSS/JavaScript code fixer. 
-When given code, fix all bugs and errors. 
-Return ONLY the fixed code in this exact format:
+    const system = `Fix all bugs in the HTML/CSS/JS code. Return ONLY fixed code in this format:
 ===HTML===
-(fixed html here)
+(html)
 ===CSS===
-(fixed css here)
+(css)
 ===JS===
-(fixed js here)
-Do not add any explanation before or after the code blocks.`;
+(js)`;
 
-    const user = `Fix all errors in this code:
-
-HTML:
-${html || '(empty)'}
-
-CSS:
-${css || '(empty)'}
-
-JavaScript:
-${js || '(empty)'}`;
-
+    const user = `HTML:\n${this.trimCode(html)}\nCSS:\n${this.trimCode(css)}\nJS:\n${this.trimCode(js)}`;
     return this.ask(system, user);
   }
 
   async findErrors(html: string, css: string, js: string): Promise<string> {
-    const system = `You are an expert web developer code reviewer.
-Analyze the HTML, CSS, and JavaScript code for bugs, errors, and issues.
-List each issue with:
-- File (HTML/CSS/JS)
-- Line or element affected
-- What the problem is
-- How to fix it
-Be specific and helpful. If no issues found, say so clearly.`;
-
-    const user = `Find all errors and issues in this code:
-
-HTML:
-${html || '(empty)'}
-
-CSS:
-${css || '(empty)'}
-
-JavaScript:
-${js || '(empty)'}`;
-
+    const system = `Review HTML/CSS/JS code for bugs and errors. List each issue with: file, problem, and fix. Be concise. If no issues, say so.`;
+    const user = `HTML:\n${this.trimCode(html)}\nCSS:\n${this.trimCode(css)}\nJS:\n${this.trimCode(js)}`;
     return this.ask(system, user);
   }
 
   async improveCode(html: string, css: string, js: string): Promise<string> {
-    const system = `You are an expert web developer.
-Suggest specific improvements for the given HTML/CSS/JavaScript code.
-Focus on: best practices, performance, accessibility, readability, and modern techniques.
-Be concise and practical.`;
-
-    const user = `Suggest improvements for this code:
-
-HTML:
-${html || '(empty)'}
-
-CSS:
-${css || '(empty)'}
-
-JavaScript:
-${js || '(empty)'}`;
-
+    const system = `Suggest practical improvements for HTML/CSS/JS code. Focus on best practices, performance, accessibility. Be concise.`;
+    const user = `HTML:\n${this.trimCode(html)}\nCSS:\n${this.trimCode(css)}\nJS:\n${this.trimCode(js)}`;
     return this.ask(system, user);
   }
 
   async explainCode(html: string, css: string, js: string): Promise<string> {
-    const system = `You are a helpful coding teacher.
-Explain what the given HTML/CSS/JavaScript code does in simple, clear language.
-Describe the structure, styling, and functionality. Keep it beginner-friendly.`;
-
-    const user = `Explain what this code does:
-
-HTML:
-${html || '(empty)'}
-
-CSS:
-${css || '(empty)'}
-
-JavaScript:
-${js || '(empty)'}`;
-
+    const system = `Explain what this HTML/CSS/JS code does in simple, beginner-friendly language. Be concise.`;
+    const user = `HTML:\n${this.trimCode(html)}\nCSS:\n${this.trimCode(css)}\nJS:\n${this.trimCode(js)}`;
     return this.ask(system, user);
   }
 
   async chat(message: string, html: string, css: string, js: string): Promise<string> {
-    const system = `You are a helpful coding assistant for an HTML/CSS/JavaScript editor.
-You have access to the user's current code. Help them with any coding questions, fixes, or tasks.
-Be concise, practical, and friendly.
-
-Current code context:
-HTML: ${html ? html.substring(0, 800) : '(empty)'}
-CSS: ${css ? css.substring(0, 500) : '(empty)'}
-JS: ${js ? js.substring(0, 500) : '(empty)'}`;
-
+    const system = `You are a helpful HTML/CSS/JS coding assistant. Be concise and practical.
+Code context — HTML: ${this.trimCode(html, 400)} | CSS: ${this.trimCode(css, 300)} | JS: ${this.trimCode(js, 300)}`;
     return this.ask(system, message);
   }
 }

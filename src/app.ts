@@ -27,6 +27,12 @@ export class App {
     this.storage = new Storage();
     this.settings = new Settings();
     this.ai = new AIService();
+    this.ai.onRetry = (attempt, waitSec) => {
+      const loading = document.querySelector('.ai-message-loading .ai-typing');
+      if (loading) {
+        loading.innerHTML = `<span style="width:auto;height:auto;background:none;border-radius:0;animation:none;font-size:11px;color:var(--text-secondary);">Rate limited — retrying in ${waitSec}s (${attempt}/${2})...</span>`;
+      }
+    };
   }
 
   init(): void {
@@ -1937,10 +1943,16 @@ export class App {
   private handleAiError(err: any): string {
     const msg = err?.message || '';
     if (msg === 'NO_KEY') return 'Please add your OpenAI API key in Settings first.';
-    if (msg === 'INVALID_KEY') return 'Invalid API key. Please check your key in Settings.';
-    if (msg === 'RATE_LIMIT') return 'Rate limit reached. Please wait a moment and try again.';
-    if (msg === 'QUOTA') return 'Your OpenAI quota is exhausted. Check your plan at platform.openai.com.';
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) return 'Network error. Please check your internet connection.';
+    if (msg === 'INVALID_KEY') return 'Invalid API key. Please check your key in Settings and make sure it starts with sk-.';
+    if (msg === 'RATE_LIMIT') return [
+      'Rate limit reached (tried 3 times automatically).',
+      '',
+      'OpenAI free tier allows only 3 requests/minute. Please wait 60 seconds and try again.',
+      '',
+      'Tip: Upgrade to a paid OpenAI plan at platform.openai.com/settings/billing for higher limits.'
+    ].join('\n');
+    if (msg === 'QUOTA') return 'Your OpenAI usage quota is exhausted. Add billing at platform.openai.com/settings/billing to continue.';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) return 'Network error. Please check your internet connection and try again.';
     return `Error: ${msg || 'Something went wrong. Please try again.'}`;
   }
 
