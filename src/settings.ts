@@ -152,34 +152,6 @@ export class Settings {
           </div>
 
           <div class="settings-section">
-            <div class="settings-section-title">AI Assistant</div>
-
-            <div class="settings-item ai-key-item">
-              <div class="settings-item-info">
-                <div class="settings-item-title">Groq API Key</div>
-                <div class="settings-item-desc">Powered by Groq (Llama) — 30 requests/min free. Stored only on this device.</div>
-              </div>
-            </div>
-            <div class="ai-key-input-row">
-              <div class="ai-key-field-wrap">
-                <input type="password" id="aiApiKeyInput" class="ai-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
-                <button class="ai-key-toggle" id="aiKeyToggle" title="Show/hide key">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-              <button class="ai-key-save-btn" id="aiKeySaveBtn">Save</button>
-              <button class="ai-key-clear-btn" id="aiKeyClearBtn">Clear</button>
-            </div>
-            <div class="ai-key-status" id="aiKeyStatus"></div>
-            <a class="ai-key-link" href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">
-              Get free API key → console.groq.com/keys
-            </a>
-          </div>
-
-          <div class="settings-section">
             <div class="settings-section-title">Legal</div>
             <a class="settings-link" id="privacyLink">
               <div class="settings-item-info">

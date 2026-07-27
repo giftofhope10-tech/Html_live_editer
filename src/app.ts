@@ -8,12 +8,9 @@ import { highlightSelectionMatches, SearchQuery, findNext, findPrevious, setSear
 import { keymap } from '@codemirror/view';
 import { Storage } from './storage';
 import { Settings } from './settings';
-import { AIService } from './ai';
-
 export class App {
   private storage: Storage;
   private settings: Settings;
-  private ai: AIService;
   private editors: Map<string, EditorView> = new Map();
   private activeTab: string = 'html';
   private autoSaveTimeout: number | null = null;
@@ -21,18 +18,10 @@ export class App {
   private modalMode: 'create' | 'rename' = 'create';
   private renameProjectId: string | null = null;
   private currentSearchQuery: string = '';
-  private aiChatHistory: Array<{role: 'user'|'ai', text: string}> = [];
 
   constructor() {
     this.storage = new Storage();
     this.settings = new Settings();
-    this.ai = new AIService();
-    this.ai.onRetry = (attempt, waitSec) => {
-      const loading = document.querySelector('.ai-message-loading .ai-typing');
-      if (loading) {
-        loading.innerHTML = `<span style="width:auto;height:auto;background:none;border-radius:0;animation:none;font-size:11px;color:var(--text-secondary);">Rate limited — retrying in ${waitSec}s (${attempt}/${2})...</span>`;
-      }
-    };
   }
 
   init(): void {
@@ -119,14 +108,6 @@ export class App {
               <polygon points="5,3 19,12 5,21"></polygon>
             </svg>
             <span>Preview</span>
-          </button>
-          <button class="ai-header-btn" id="aiBtn" aria-label="AI Assistant" title="AI Assistant">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"></path>
-              <line x1="8" y1="22" x2="16" y2="22"></line>
-              <line x1="12" y1="18" x2="12" y2="22"></line>
-            </svg>
-            <span>AI</span>
           </button>
           <button class="icon-btn" id="settingsBtn" aria-label="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -401,59 +382,6 @@ export class App {
               </svg>
             </button>
           </div>
-        </div>
-      </div>
-
-      <div class="ai-panel" id="aiPanel">
-        <div class="ai-panel-header">
-          <div class="ai-panel-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"></path>
-              <line x1="8" y1="22" x2="16" y2="22"></line>
-              <line x1="12" y1="18" x2="12" y2="22"></line>
-            </svg>
-            <span>AI Assistant</span>
-          </div>
-          <div class="ai-panel-header-actions">
-            <button class="ai-clear-chat-btn" id="aiClearChat" title="Clear results">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <polyline points="3,6 5,6 21,6"></polyline>
-                <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"></path>
-              </svg>
-            </button>
-            <button class="icon-btn ai-panel-close" id="aiPanelClose" aria-label="Close AI">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="ai-find-fix-wrap">
-          <button class="ai-find-fix-btn" id="aiFindFixBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            Find Errors &amp; Auto Fix
-          </button>
-          <p class="ai-find-fix-desc">Scans your code for bugs, then automatically fixes and applies the corrections.</p>
-        </div>
-
-        <div class="ai-chat-body" id="aiChatBody">
-          <div class="ai-welcome">
-            <p>Press the button above to scan and fix your code automatically.</p>
-            <p class="ai-welcome-sub">Powered by Groq (Llama) — 30 requests/min free.</p>
-          </div>
-        </div>
-
-        <div class="ai-no-key-notice" id="aiNoKeyNotice" style="display:none;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <span>Add your Groq API key in <strong>Settings</strong> to use AI features.</span>
         </div>
       </div>
 
@@ -931,40 +859,7 @@ export class App {
     this.bindPreviewDeviceButtons('previewDesktop', 'previewTablet', 'previewMobile', 'livePreviewFrame');
     this.bindPreviewDeviceButtons('fullPreviewDesktop', 'fullPreviewTablet', 'fullPreviewMobile', 'previewFrame', 'previewIframeWrapper');
 
-    document.getElementById('aiBtn')?.addEventListener('click', () => {
-      this.showAiPanel();
-    });
-
-    document.getElementById('aiPanelClose')?.addEventListener('click', () => {
-      this.hideAiPanel();
-    });
-
-    document.getElementById('aiClearChat')?.addEventListener('click', () => {
-      this.clearAiChat();
-    });
-
-    document.getElementById('aiFindFixBtn')?.addEventListener('click', () => {
-      this.handleFindAndFix();
-    });
-
-    document.getElementById('aiKeySaveBtn')?.addEventListener('click', () => {
-      this.saveAiApiKey();
-    });
-
-    document.getElementById('aiKeyClearBtn')?.addEventListener('click', () => {
-      this.clearAiApiKey();
-    });
-
-    document.getElementById('aiKeyToggle')?.addEventListener('click', () => {
-      this.toggleAiKeyVisibility();
-    });
-
-    document.getElementById('aiApiKeyInput')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.saveAiApiKey();
-    });
-
     this.updateLivePreview();
-    this.updateAiKeyStatus();
   }
 
   private bindPreviewDeviceButtons(desktopId: string, tabletId: string, mobileId: string, frameId: string, wrapperId?: string): void {
@@ -1750,221 +1645,6 @@ export class App {
       selection: { anchor: pos + cursorOffset }
     });
     editor.focus();
-  }
-
-  private showAiPanel(): void {
-    const panel = document.getElementById('aiPanel');
-    panel?.classList.add('active');
-    this.updateAiNoKeyNotice();
-    setTimeout(() => {
-      document.getElementById('aiChatInput')?.focus();
-    }, 300);
-  }
-
-  private hideAiPanel(): void {
-    document.getElementById('aiPanel')?.classList.remove('active');
-  }
-
-  private clearAiChat(): void {
-    this.aiChatHistory = [];
-    const body = document.getElementById('aiChatBody');
-    if (body) {
-      body.innerHTML = `
-        <div class="ai-welcome">
-          <p>Ask me anything about your code — fix errors, improve it, or explain it.</p>
-          <p class="ai-welcome-sub">Your API key is stored only on your device.</p>
-        </div>`;
-    }
-  }
-
-  private updateAiNoKeyNotice(): void {
-    const notice = document.getElementById('aiNoKeyNotice');
-    if (notice) {
-      notice.style.display = this.ai.hasKey() ? 'none' : 'flex';
-    }
-  }
-
-  private updateAiKeyStatus(): void {
-    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
-    const status = document.getElementById('aiKeyStatus');
-    if (input) {
-      input.value = '';
-      if (this.ai.hasKey()) {
-        const key = this.ai.getKey();
-        input.placeholder = key.substring(0, 8) + '••••••••••••••••';
-      } else {
-        input.placeholder = 'gsk_...';
-      }
-    }
-    if (status) {
-      if (this.ai.hasKey()) {
-        status.className = 'ai-key-status set';
-        status.textContent = 'Groq API key saved on this device.';
-      } else {
-        status.className = 'ai-key-status';
-        status.textContent = '';
-      }
-    }
-  }
-
-  private saveAiApiKey(): void {
-    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
-    const key = input?.value?.trim();
-    if (!key) {
-      this.showToast('Please enter your API key');
-      return;
-    }
-    if (!/^[\x20-\x7E]+$/.test(key)) {
-      this.showToast('Invalid key — contains invalid characters');
-      return;
-    }
-    this.ai.saveKey(key);
-    this.updateAiKeyStatus();
-    this.showToast('API key saved!');
-  }
-
-  private clearAiApiKey(): void {
-    this.ai.clearKey();
-    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
-    if (input) input.value = '';
-    this.updateAiKeyStatus();
-    this.showToast('API key removed');
-  }
-
-  private toggleAiKeyVisibility(): void {
-    const input = document.getElementById('aiApiKeyInput') as HTMLInputElement;
-    if (input) {
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
-  }
-
-  private getCurrentCode(): { html: string; css: string; js: string } {
-    return {
-      html: this.editors.get('html')?.state.doc.toString() || '',
-      css: this.editors.get('css')?.state.doc.toString() || '',
-      js: this.editors.get('js')?.state.doc.toString() || ''
-    };
-  }
-
-  private addAiMessage(role: 'user' | 'ai', text: string, isLoading = false): HTMLElement {
-    const body = document.getElementById('aiChatBody');
-    if (!body) return document.createElement('div');
-
-    const welcome = body.querySelector('.ai-welcome');
-    if (welcome) welcome.remove();
-
-    const msg = document.createElement('div');
-    msg.className = `ai-message ai-message-${role}${isLoading ? ' ai-message-loading' : ''}`;
-    
-    if (isLoading) {
-      msg.innerHTML = `<div class="ai-typing"><span></span><span></span><span></span></div>`;
-    } else {
-      const formatted = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre class="ai-code-block"><code>$1</code></pre>')
-        .replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>')
-        .replace(/\n/g, '<br>');
-      msg.innerHTML = `<div class="ai-message-text">${formatted}</div>`;
-
-      if (role === 'ai') {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'ai-copy-btn';
-        copyBtn.title = 'Copy response';
-        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        copyBtn.addEventListener('click', () => {
-          navigator.clipboard.writeText(text).then(() => this.showToast('Copied!'));
-        });
-        msg.appendChild(copyBtn);
-      }
-    }
-
-    body.appendChild(msg);
-    body.scrollTop = body.scrollHeight;
-    return msg;
-  }
-
-  private setAiLoading(loading: boolean): void {
-    const btn = document.getElementById('aiFindFixBtn') as HTMLButtonElement;
-    if (btn) {
-      btn.disabled = loading;
-      btn.textContent = loading ? 'Working...' : '';
-      if (!loading) {
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Find Errors &amp; Auto Fix`;
-      }
-    }
-  }
-
-  private handleAiError(err: any): string {
-    const msg = err?.message || '';
-    if (msg === 'NO_KEY') return 'Please add your Groq API key in Settings first.';
-    if (msg === 'INVALID_KEY') return 'Invalid API key. Check your Groq key in Settings — it should start with gsk_.';
-    if (msg === 'RATE_LIMIT') return 'Rate limit reached (retried automatically).\n\nGroq free tier: 30 req/min. Please wait a moment and try again.';
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) return 'Network error. Please check your internet connection and try again.';
-    return `Error: ${msg || 'Something went wrong. Please try again.'}`;
-  }
-
-  private async handleFindAndFix(): Promise<void> {
-    if (!this.ai.hasKey()) {
-      this.showToast('Add Groq API key in Settings first');
-      this.showSettings();
-      return;
-    }
-
-    const code = this.getCurrentCode();
-    this.addAiMessage('user', 'Find Errors & Auto Fix');
-    const loadingEl = this.addAiMessage('ai', '', true);
-    this.setAiLoading(true);
-
-    try {
-      const errors = await this.ai.findErrors(code.html, code.css, code.js);
-      loadingEl.remove();
-
-      if (errors.toLowerCase().includes('no issues') || errors.toLowerCase().includes('no errors')) {
-        this.addAiMessage('ai', 'No errors found — your code looks good!');
-        return;
-      }
-
-      this.addAiMessage('ai', `Issues found:\n${errors}`);
-
-      const fixLoadingEl = this.addAiMessage('ai', '', true);
-      const fixResult = await this.ai.fixCode(code.html, code.css, code.js);
-      fixLoadingEl.remove();
-
-      this.applyFixedCode(fixResult);
-      this.addAiMessage('ai', 'Errors fixed and applied to your code automatically!');
-      this.showToast('Code fixed and applied!');
-    } catch (err: any) {
-      const existing = document.getElementById('aiChatBody')?.querySelector('.ai-loading');
-      existing?.remove();
-      this.addAiMessage('ai', this.handleAiError(err));
-    } finally {
-      this.setAiLoading(false);
-    }
-  }
-
-  private applyFixedCode(result: string): void {
-    const htmlMatch = result.match(/===HTML===\s*([\s\S]*?)(?:===CSS===|$)/);
-    const cssMatch = result.match(/===CSS===\s*([\s\S]*?)(?:===JS===|$)/);
-    const jsMatch = result.match(/===JS===\s*([\s\S]*?)$/);
-
-    const applyToEditor = (lang: string, content: string) => {
-      const editor = this.editors.get(lang);
-      if (editor && content.trim()) {
-        editor.dispatch({
-          changes: { from: 0, to: editor.state.doc.length, insert: content.trim() }
-        });
-      }
-    };
-
-    if (htmlMatch?.[1]) applyToEditor('html', htmlMatch[1]);
-    if (cssMatch?.[1]) applyToEditor('css', cssMatch[1]);
-    if (jsMatch?.[1]) applyToEditor('js', jsMatch[1]);
-
-    this.saveCode();
-    this.updateLivePreview();
-    this.showToast('Fixed code applied!');
   }
 
   private showToast(message: string): void {
