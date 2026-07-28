@@ -1,4 +1,4 @@
-# Html Live Editer
+# Html Live Editor — Native Android App
 
 **Package Name:** `com.iftechstudio.html_live_editor`
 
@@ -59,9 +59,14 @@ A fully-featured code editor designed for every screen size — phone, tablet, l
 ## Running the App
 
 ```bash
-npm run dev     # Start development server on port 5000
-npm run build   # Build for production
-npm run preview # Preview production build
+npm run dev     # Start web dev server on port 5000
+npm run build   # Build web PWA
+```
+
+### Android (Native) Build
+The `android/` folder is a pure-native Jetpack Compose app. Build via Codemagic CI/CD (`codemagic.yaml`) or open in Android Studio:
+```
+cd android && ./gradlew assembleDebug
 ```
 
 ## Keyboard Shortcuts

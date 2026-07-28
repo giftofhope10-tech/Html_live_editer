@@ -1,112 +1,21 @@
-# HTML Live Editor ProGuard Rules
-# SDK 35 Compatible Configuration
+# Keep Compose
+-keep class androidx.compose.** { *; }
 
-#-------------------------------------------------
-# Keep application class
-#-------------------------------------------------
--keep class com.htmleditor.app.** { *; }
+# Keep Room entities
+-keep class com.iftechstudio.html_live_editor.data.** { *; }
 
-#-------------------------------------------------
-# Android Framework
-#-------------------------------------------------
--keep public class * extends android.app.Activity
--keep public class * extends android.app.Application
--keep public class * extends android.app.Service
--keep public class * extends android.content.BroadcastReceiver
--keep public class * extends android.content.ContentProvider
--keep public class * extends android.app.backup.BackupAgentHelper
--keep public class * extends android.preference.Preference
+# Sora Editor
+-keep class io.github.rosemoe.sora.** { *; }
+-dontwarn io.github.rosemoe.sora.**
 
-#-------------------------------------------------
-# AndroidX
-#-------------------------------------------------
--keep class androidx.** { *; }
--keep interface androidx.** { *; }
--dontwarn androidx.**
+# Kotlin coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
-#-------------------------------------------------
-# WebView
-#-------------------------------------------------
--keepclassmembers class * extends android.webkit.WebViewClient {
-    public void *(android.webkit.WebView, java.lang.String, android.graphics.Bitmap);
-    public boolean *(android.webkit.WebView, java.lang.String);
-}
--keepclassmembers class * extends android.webkit.WebViewClient {
-    public void *(android.webkit.WebView, java.lang.String);
-}
-
-#-------------------------------------------------
-# JavaScript Interface
-#-------------------------------------------------
--keepclassmembers class * {
-    @android.webkit.JavascriptInterface <methods>;
-}
-
-#-------------------------------------------------
-# Google Play Core
-#-------------------------------------------------
--keep class com.google.android.play.core.** { *; }
--dontwarn com.google.android.play.core.**
-
-#-------------------------------------------------
-# Material Design
-#-------------------------------------------------
--keep class com.google.android.material.** { *; }
--dontwarn com.google.android.material.**
-
-#-------------------------------------------------
-# Kotlin
-#-------------------------------------------------
--keep class kotlin.** { *; }
--keep class kotlin.Metadata { *; }
--dontwarn kotlin.**
--keepclassmembers class **$WhenMappings {
+# DataStore
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
     <fields>;
 }
--keepclassmembers class kotlin.Metadata {
-    public <methods>;
-}
 
-#-------------------------------------------------
-# Coroutines
-#-------------------------------------------------
--keepclassmembers class kotlinx.coroutines.** {
-    volatile <fields>;
-}
--dontwarn kotlinx.coroutines.**
-
-#-------------------------------------------------
-# R8 Full Mode Compatibility
-#-------------------------------------------------
--keepattributes *Annotation*
--keepattributes SourceFile,LineNumberTable
--keepattributes Signature
--keepattributes Exceptions
--keepattributes InnerClasses
--keepattributes EnclosingMethod
-
-#-------------------------------------------------
-# Mapping File Output (Handled by Gradle)
-#-------------------------------------------------
-# Note: Mapping file output is now handled by AGP 8+
-# Location: app/build/outputs/mapping/release/mapping.txt
-
-#-------------------------------------------------
-# Optimization
-#-------------------------------------------------
--optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
--optimizationpasses 5
--allowaccessmodification
--dontpreverify
-
-#-------------------------------------------------
-# Remove Logging in Release
-#-------------------------------------------------
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int v(...);
-    public static int i(...);
-    public static int w(...);
-    public static int d(...);
-    public static int e(...);
-}
+-dontwarn java.lang.instrument.ClassFileTransformer
+-dontwarn sun.misc.SignalHandler

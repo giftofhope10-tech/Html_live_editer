@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.HTMLEditor" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#6366f1</item>
-        <item name="colorPrimaryVariant">#4f46e5</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSecondary">#6366f1</item>
-        <item name="colorSecondaryVariant">#4f46e5</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="android:statusBarColor">#1a1a2e</item>
-        <item name="android:navigationBarColor">#1a1a2e</item>
-        <item name="android:windowBackground">#0f0f23</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
-
-    <style name="Theme.HTMLEditor.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_background</item>
-        <item name="android:statusBarColor">#FFFFFF</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
-        <item name="android:windowLightStatusBar">true</item>
+    <!-- Base theme — no action bar; Compose draws everything -->
+    <style name="Theme.HTMLEditor" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 </resources>
