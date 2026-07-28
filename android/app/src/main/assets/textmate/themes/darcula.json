@@ -1,0 +1,98 @@
+{
+  "name": "Darcula",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#282b2e",
+    "editor.foreground": "#babec4",
+    "editorLineNumber.foreground": "#606366",
+    "editor.lineHighlightBackground": "#323844",
+    "editor.selectionBackground": "#214283"
+  },
+  "tokenColors": [
+    {
+      "name": "Comment",
+      "scope": ["comment", "comment.block", "comment.line"],
+      "settings": { "foreground": "#808080", "fontStyle": "italic" }
+    },
+    {
+      "name": "String",
+      "scope": ["string", "string.quoted", "string.template"],
+      "settings": { "foreground": "#6a8759" }
+    },
+    {
+      "name": "Escape",
+      "scope": "constant.character.escape",
+      "settings": { "foreground": "#cc7832" }
+    },
+    {
+      "name": "Number",
+      "scope": "constant.numeric",
+      "settings": { "foreground": "#6897bb" }
+    },
+    {
+      "name": "Keyword",
+      "scope": ["keyword", "keyword.control", "keyword.operator"],
+      "settings": { "foreground": "#cc7832", "fontStyle": "bold" }
+    },
+    {
+      "name": "Storage",
+      "scope": "storage.type",
+      "settings": { "foreground": "#cc7832", "fontStyle": "bold" }
+    },
+    {
+      "name": "Constant language",
+      "scope": "constant.language",
+      "settings": { "foreground": "#9876aa" }
+    },
+    {
+      "name": "Function name",
+      "scope": "entity.name.function",
+      "settings": { "foreground": "#ffc66d" }
+    },
+    {
+      "name": "Tag name",
+      "scope": "entity.name.tag",
+      "settings": { "foreground": "#e8bf6a" }
+    },
+    {
+      "name": "Attribute name",
+      "scope": "entity.other.attribute-name",
+      "settings": { "foreground": "#babec4" }
+    },
+    {
+      "name": "HTML Entity",
+      "scope": "constant.character.entity",
+      "settings": { "foreground": "#9876aa" }
+    },
+    {
+      "name": "CSS property",
+      "scope": "support.type.property-name",
+      "settings": { "foreground": "#babec4" }
+    },
+    {
+      "name": "CSS value",
+      "scope": ["support.constant.property-value", "support.function.css"],
+      "settings": { "foreground": "#cc7832" }
+    },
+    {
+      "name": "CSS color",
+      "scope": "constant.other.color",
+      "settings": { "foreground": "#6a8759" }
+    },
+    {
+      "name": "CSS at-rule",
+      "scope": "keyword.control.at-rule",
+      "settings": { "foreground": "#cc7832", "fontStyle": "bold" }
+    },
+    {
+      "name": "CSS number/unit",
+      "scope": "constant.numeric.css",
+      "settings": { "foreground": "#6897bb" }
+    },
+    {
+      "name": "CSS selector",
+      "scope": "entity.name.tag.css",
+      "settings": { "foreground": "#e8bf6a" }
+    }
+  ]
+}
