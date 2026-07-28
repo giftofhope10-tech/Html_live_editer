@@ -21,26 +21,33 @@ class HtmlEditorApp : Application() {
     }
 
     private fun initTextMate() {
-        // Point the TextMate engine at our assets folder
-        FileProviderRegistry.getInstance().addFileProvider(
-            AssetsFileResolver(assets)
-        )
+        // Step 1: register the assets folder as the file provider
+        val provider = AssetsFileResolver(assets)
+        FileProviderRegistry.getInstance().addFileProvider(provider)
 
-        // Load dark theme (Darcula) and light theme (QuietLight)
-        listOf("textmate/themes/darcula.json" to "darcula",
-               "textmate/themes/QuietLight.json" to "QuietLight").forEach { (path, name) ->
+        // Step 2: load color themes
+        listOf(
+            "darcula"    to "textmate/themes/darcula.json",
+            "QuietLight" to "textmate/themes/QuietLight.json"
+        ).forEach { (name, path) ->
             try {
-                val stream = FileProviderRegistry.getInstance().tryGetInputStream(path)
-                    ?: return@forEach
+                val stream = provider.tryGetInputStream(path) ?: return@forEach
                 ThemeRegistry.getInstance().loadTheme(
-                    ThemeModel(IThemeSource.fromInputStream(stream, path, null), name)
+                    ThemeModel(
+                        IThemeSource.fromInputStream(stream, path, provider),
+                        name
+                    )
                 )
-            } catch (_: Exception) { /* skip missing theme */ }
+            } catch (e: Exception) {
+                // theme unavailable – editor will still work without colours
+            }
         }
 
-        // Load grammar definitions listed in languages.json
+        // Step 3: load grammar definitions (references html/js/css grammar files)
         try {
             GrammarRegistry.getInstance().loadGrammars("textmate/languages.json")
-        } catch (_: Exception) { /* grammars not yet downloaded; editor stays plain */ }
+        } catch (e: Exception) {
+            // grammars unavailable – editor falls back to EmptyLanguage
+        }
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.lang.EmptyLanguage
+import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
@@ -32,17 +33,13 @@ fun SoraCodeEditor(
         factory = { ctx ->
             CodeEditor(ctx).apply {
                 typefaceText = Typeface.MONOSPACE
-
-                // Language — TextMate for all three; falls back to plain if grammars
-                // haven't been downloaded yet (first cold build)
                 setEditorLanguage(languageFor(language))
-
                 setText(code)
                 lastSetCode.value = code
-
                 setTextSize(fontSize.toFloat())
                 isWordwrap = wordWrap
                 colorScheme = schemeFor(isDark)
+                tag = isDark
                 isOverScrollEnabled = false
 
                 subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
@@ -54,7 +51,6 @@ fun SoraCodeEditor(
                         }
                     }
                 }
-
                 onEditorCreated?.invoke(this)
             }
         },
@@ -62,20 +58,11 @@ fun SoraCodeEditor(
             ed.setTextSize(fontSize.toFloat())
             if (ed.isWordwrap != wordWrap) ed.isWordwrap = wordWrap
             // Swap color scheme when dark/light preference changes
-            val currentIsDark = ed.colorScheme is TextMateColorScheme &&
-                    (ed.colorScheme as TextMateColorScheme).themeSource.let { true } // replaced below
-            val needsSwap = run {
-                val cs = ed.colorScheme
-                if (cs is TextMateColorScheme) false  // re-check via theme name not possible; swap on every isDark toggle
-                else true
-            }
-            // Simpler: always rebuild scheme when isDark toggle requires it.
-            // We track with a stable key stored in the editor's tag.
-            val tagDark = ed.tag as? Boolean
-            if (tagDark != isDark) {
+            if (ed.tag as? Boolean != isDark) {
                 ed.colorScheme = schemeFor(isDark)
                 ed.tag = isDark
             }
+            // External code change (e.g. project switch)
             if (code != lastSetCode.value) {
                 settingProgrammatically.set(true)
                 ed.setText(code)
@@ -87,8 +74,8 @@ fun SoraCodeEditor(
     )
 }
 
-/** Scope names registered in assets/textmate/languages.json */
-private fun languageFor(lang: String): Any {
+/** Returns a properly-typed Language for each tab. */
+private fun languageFor(lang: String): Language {
     val scopeName = when (lang) {
         "html" -> "text.html.basic"
         "js"   -> "source.js"
@@ -97,7 +84,7 @@ private fun languageFor(lang: String): Any {
     }
     return try {
         TextMateLanguage.create(scopeName, true /* async highlight */)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         EmptyLanguage()
     }
 }
@@ -108,23 +95,23 @@ private fun schemeFor(dark: Boolean): EditorColorScheme {
         val theme = ThemeRegistry.getInstance().getTheme(themeName)
         if (theme != null) TextMateColorScheme.create(theme)
         else fallbackScheme(dark)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         fallbackScheme(dark)
     }
 }
 
 private fun fallbackScheme(dark: Boolean): EditorColorScheme =
     if (dark) EditorColorScheme().apply {
-        setColor(EditorColorScheme.WHOLE_BACKGROUND,       0xFF282B2E.toInt())
-        setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, 0xFF313438.toInt())
-        setColor(EditorColorScheme.TEXT_NORMAL,            0xFFBABEC4.toInt())
-        setColor(EditorColorScheme.CURRENT_LINE,           0xFF323844.toInt())
+        setColor(EditorColorScheme.WHOLE_BACKGROUND,        0xFF282B2E.toInt())
+        setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND,  0xFF313438.toInt())
+        setColor(EditorColorScheme.TEXT_NORMAL,             0xFFBABEC4.toInt())
+        setColor(EditorColorScheme.CURRENT_LINE,            0xFF323844.toInt())
     } else EditorColorScheme().apply {
-        setColor(EditorColorScheme.WHOLE_BACKGROUND,       0xFFFAFAFA.toInt())
-        setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, 0xFFF0F0F0.toInt())
-        setColor(EditorColorScheme.LINE_NUMBER,            0xFF999999.toInt())
-        setColor(EditorColorScheme.TEXT_NORMAL,            0xFF383A42.toInt())
-        setColor(EditorColorScheme.CURRENT_LINE,           0xFFEEEEFF.toInt())
-        setColor(EditorColorScheme.SELECTION_HANDLE,       0xFF5B4FCF.toInt())
-        setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, 0xFFB3B3F0.toInt())
+        setColor(EditorColorScheme.WHOLE_BACKGROUND,          0xFFFAFAFA.toInt())
+        setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND,    0xFFF0F0F0.toInt())
+        setColor(EditorColorScheme.LINE_NUMBER,               0xFF999999.toInt())
+        setColor(EditorColorScheme.TEXT_NORMAL,               0xFF383A42.toInt())
+        setColor(EditorColorScheme.CURRENT_LINE,              0xFFEEEEFF.toInt())
+        setColor(EditorColorScheme.SELECTION_HANDLE,          0xFF5B4FCF.toInt())
+        setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND,  0xFFB3B3F0.toInt())
     }
