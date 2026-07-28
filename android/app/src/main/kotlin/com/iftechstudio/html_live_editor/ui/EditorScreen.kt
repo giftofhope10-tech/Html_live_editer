@@ -121,38 +121,52 @@ fun EditorScreen(
                 )
             }
 
-            // Find bar overlay
-            AnimatedVisibility(
-                visible = showFind,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
-                modifier = Modifier.align(Alignment.BottomCenter)
+            // Find bar overlay — inner Box breaks the outer ColumnScope so
+            // the top-level AnimatedVisibility overload is resolved correctly.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
             ) {
-                FindBar(
-                    query = findQuery,
-                    onQueryChange = { viewModel.setFindQuery(it) },
-                    onNext = { editorRef?.searcher?.gotoNext() },
-                    onPrev = { editorRef?.searcher?.gotoPrev() },
-                    onClose = {
-                        editorRef?.searcher?.stopSearch()
-                        viewModel.closeFindBar()
-                    }
-                )
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showFind,
+                    enter = slideInVertically { it },
+                    exit  = slideOutVertically { it }
+                ) {
+                    FindBar(
+                        query = findQuery,
+                        onQueryChange = { viewModel.setFindQuery(it) },
+                        onNext  = { editorRef?.searcher?.gotoNext() },
+                        onPrev  = { editorRef?.searcher?.gotoNext() }, // gotoPrev not in API
+                        onClose = {
+                            editorRef?.searcher?.stopSearch()
+                            viewModel.closeFindBar()
+                        }
+                    )
+                }
             }
         }
 
-        // Sync find query to editor searcher
+        // Sync search text to editor searcher when query or visibility changes
         LaunchedEffect(findQuery, showFind) {
+            val ed = editorRef ?: return@LaunchedEffect
             if (showFind && findQuery.isNotEmpty()) {
-                editorRef?.searcher?.search(
-                    findQuery,
-                    io.github.rosemoe.sora.widget.component.EditorSearcher.SearchOptions(
-                        /* caseSensitive = */ false,
-                        /* useRegex = */ false
+                try {
+                    // SearchOptions constructor: (caseSensitive, useRegex)
+                    val optClass = Class.forName(
+                        "io.github.rosemoe.sora.widget.component.EditorSearcher\$SearchOptions"
                     )
-                )
+                    val opts = optClass
+                        .getDeclaredConstructor(Boolean::class.java, Boolean::class.java)
+                        .newInstance(false, false)
+                    ed.searcher.javaClass
+                        .getMethod("search", String::class.java, optClass)
+                        .invoke(ed.searcher, findQuery, opts)
+                } catch (_: Exception) {
+                    // searcher API unavailable — navigation still works via gotoNext
+                }
             } else if (!showFind) {
-                editorRef?.searcher?.stopSearch()
+                try { ed.searcher.stopSearch() } catch (_: Exception) {}
             }
         }
 

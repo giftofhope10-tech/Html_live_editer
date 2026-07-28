@@ -40,7 +40,6 @@ fun SoraCodeEditor(
                 isWordwrap = wordWrap
                 colorScheme = schemeFor(isDark)
                 tag = isDark
-                isOverScrollEnabled = false
 
                 subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
                     if (!settingProgrammatically.get()) {
@@ -57,12 +56,10 @@ fun SoraCodeEditor(
         update = { ed ->
             ed.setTextSize(fontSize.toFloat())
             if (ed.isWordwrap != wordWrap) ed.isWordwrap = wordWrap
-            // Swap color scheme when dark/light preference changes
             if (ed.tag as? Boolean != isDark) {
                 ed.colorScheme = schemeFor(isDark)
                 ed.tag = isDark
             }
-            // External code change (e.g. project switch)
             if (code != lastSetCode.value) {
                 settingProgrammatically.set(true)
                 ed.setText(code)
@@ -74,7 +71,6 @@ fun SoraCodeEditor(
     )
 }
 
-/** Returns a properly-typed Language for each tab. */
 private fun languageFor(lang: String): Language {
     val scopeName = when (lang) {
         "html" -> "text.html.basic"
@@ -83,7 +79,7 @@ private fun languageFor(lang: String): Language {
         else   -> return EmptyLanguage()
     }
     return try {
-        TextMateLanguage.create(scopeName, true /* async highlight */)
+        TextMateLanguage.create(scopeName, true)
     } catch (e: Exception) {
         EmptyLanguage()
     }
@@ -92,9 +88,9 @@ private fun languageFor(lang: String): Language {
 private fun schemeFor(dark: Boolean): EditorColorScheme {
     val themeName = if (dark) "darcula" else "QuietLight"
     return try {
-        val theme = ThemeRegistry.getInstance().getTheme(themeName)
-        if (theme != null) TextMateColorScheme.create(theme)
-        else fallbackScheme(dark)
+        // setTheme activates the named theme, then create(registry) builds the scheme
+        ThemeRegistry.getInstance().setTheme(themeName)
+        TextMateColorScheme.create(ThemeRegistry.getInstance())
     } catch (e: Exception) {
         fallbackScheme(dark)
     }

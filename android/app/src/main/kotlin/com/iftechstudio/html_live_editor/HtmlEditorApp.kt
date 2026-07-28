@@ -21,33 +21,33 @@ class HtmlEditorApp : Application() {
     }
 
     private fun initTextMate() {
-        // Step 1: register the assets folder as the file provider
-        val provider = AssetsFileResolver(assets)
-        FileProviderRegistry.getInstance().addFileProvider(provider)
+        // Step 1: register assets as the file provider
+        FileProviderRegistry.getInstance().addFileProvider(AssetsFileResolver(assets))
 
-        // Step 2: load color themes
+        // Step 2: load dark + light themes directly from assets
         listOf(
             "darcula"    to "textmate/themes/darcula.json",
             "QuietLight" to "textmate/themes/QuietLight.json"
         ).forEach { (name, path) ->
             try {
-                val stream = provider.tryGetInputStream(path) ?: return@forEach
-                ThemeRegistry.getInstance().loadTheme(
-                    ThemeModel(
-                        IThemeSource.fromInputStream(stream, path, provider),
-                        name
+                assets.open(path).use { stream ->
+                    ThemeRegistry.getInstance().loadTheme(
+                        ThemeModel(
+                            IThemeSource.fromInputStream(stream, path, null),
+                            name
+                        )
                     )
-                )
+                }
             } catch (e: Exception) {
-                // theme unavailable – editor will still work without colours
+                // theme file missing — editor still works without colour
             }
         }
 
-        // Step 3: load grammar definitions (references html/js/css grammar files)
+        // Step 3: register grammar definitions (html / js / css)
         try {
             GrammarRegistry.getInstance().loadGrammars("textmate/languages.json")
         } catch (e: Exception) {
-            // grammars unavailable – editor falls back to EmptyLanguage
+            // grammars unavailable — editor falls back to plain text
         }
     }
 }
