@@ -1,0 +1,24 @@
+{
+  "languages": [
+    {
+      "name": "html",
+      "scopeName": "text.html.basic",
+      "grammar": "textmate/html.tmLanguage.json",
+      "embeddedLanguages": {
+        "source.js": "javascript",
+        "source.css.embedded.html": "css",
+        "source.css": "css"
+      }
+    },
+    {
+      "name": "javascript",
+      "scopeName": "source.js",
+      "grammar": "textmate/JavaScript.tmLanguage.json"
+    },
+    {
+      "name": "css",
+      "scopeName": "source.css",
+      "grammar": "textmate/css.tmLanguage.json"
+    }
+  ]
+}

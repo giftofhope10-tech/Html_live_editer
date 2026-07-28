@@ -29,6 +29,29 @@ workflows:
             https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
 
+      - name: Download TextMate grammar files
+        script: |
+          set -e
+          BASE="android/app/src/main/assets/textmate"
+          mkdir -p "$BASE/themes"
+
+          # Grammar files from VSCode built-in extensions
+          curl -fsSL "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/html/syntaxes/html.tmLanguage.json" \
+            -o "$BASE/html.tmLanguage.json"
+          curl -fsSL "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScript.tmLanguage.json" \
+            -o "$BASE/JavaScript.tmLanguage.json"
+          curl -fsSL "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/css/syntaxes/css.tmLanguage.json" \
+            -o "$BASE/css.tmLanguage.json"
+
+          # Themes from sora-editor demo app
+          curl -fsSL "https://raw.githubusercontent.com/Rosemoe/sora-editor/main/app/src/main/assets/textmate/darcula.json" \
+            -o "$BASE/themes/darcula.json"
+          curl -fsSL "https://raw.githubusercontent.com/Rosemoe/sora-editor/main/app/src/main/assets/textmate/QuietLight.json" \
+            -o "$BASE/themes/QuietLight.json"
+
+          echo "Grammar files downloaded:"
+          ls -lh "$BASE" "$BASE/themes"
+
       - name: Build Android Debug APK
         script: |
           cd android
