@@ -64,14 +64,6 @@ export default defineConfig({
     })
   ],
   build: {
-    target: ['es2018', 'chrome70', 'safari12'],
-    minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          codemirror: ['codemirror', '@codemirror/lang-html', '@codemirror/lang-css', '@codemirror/lang-javascript']
-        }
-      }
-    }
+    minify: 'esbuild'
   }
 });

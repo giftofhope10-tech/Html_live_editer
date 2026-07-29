@@ -18,11 +18,11 @@
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.38.8",
     "codemirror": "^6.0.1",
-    "vite-plugin-pwa": "^0.20.5",
     "workbox-window": "^7.1.0"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^6.4.3",
+    "vite-plugin-pwa": "^0.21.2"
   }
 }
