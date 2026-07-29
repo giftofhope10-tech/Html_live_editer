@@ -1511,32 +1511,22 @@ export class App {
     const filename = `${projectName}.${ext}`;
 
     try {
-      const isAndroidWebView = window.location.protocol === 'file:' || 
-                               /Android/i.test(navigator.userAgent);
-      
-      if (isAndroidWebView && (window as any).Android?.saveBase64File) {
-        const base64 = btoa(unescape(encodeURIComponent(content)));
-        (window as any).Android.saveBase64File(base64, filename, mimeType);
-        this.showToast(`Saving ${filename}...`);
-      } else {
-        const blob = new Blob([content], { type: mimeType });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        
-        a.click();
-        
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
-        
-        this.showToast(`Downloading ${filename}`);
-      }
+      const blob = new Blob([content], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      this.showToast(`Downloading ${filename}`);
     } catch (err) {
       console.error('Download failed:', err);
       this.fallbackDownload(content, filename, mimeType);
