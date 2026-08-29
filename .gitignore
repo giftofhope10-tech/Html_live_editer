@@ -21,3 +21,33 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/app/*.iml
+android/capacitor-cordova-android-plugins/build/
+*.apk
+*.aab
+*.jks
+
+# Signing keys (never commit these!)
+*.keystore
+release-key.jks
+signing.properties
+
+# Java
+*.class
+*.jar
+!android/gradle/wrapper/gradle-wrapper.jar
+*.war
+*.nar
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Kotlin
+*.kotlin_module
