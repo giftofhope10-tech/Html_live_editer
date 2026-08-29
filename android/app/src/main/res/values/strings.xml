@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Html Live Editer</string>
+    <string name="title_activity_main">Html Live Editer</string>
+    <string name="package_name">com.giftofhope10.htmliveeditor</string>
+    <string name="custom_url_scheme">com.giftofhope10.htmliveeditor</string>
+</resources>
