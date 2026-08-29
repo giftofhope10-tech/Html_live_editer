@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.giftofhope10.htmliveeditor',
+  appId: 'com.iftechstudio.html_live_editor',
   appName: 'Html Live Editer',
   webDir: 'dist',
   bundledWebRuntime: false,
